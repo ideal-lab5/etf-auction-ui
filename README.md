@@ -1,2 +1,2 @@
-# etf-aswap-ui
-User interface - atomic swap implementation
+# etf-auction-ui
+User interface - sealed auction implementation
