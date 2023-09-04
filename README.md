@@ -1,2 +1,10 @@
-# etf-auction-ui
-User interface - sealed auction implementation
+# ETF Sealed Auction dapp
+
+## Start with
+```bash
+npm install
+```
+## How to run
+```bash
+npm run dev
+```
