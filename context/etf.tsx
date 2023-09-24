@@ -27,8 +27,14 @@ export const EtfProvider: React.FC<EtfProviderProps> = (props) => {
 
 	useEffect(() => {
 		const setup = async () => {
-			// TODO: Set timeout for this operation with Promise.race
-			await api.current.init()
+			const timeout = new Promise((_, reject) => {
+				setTimeout(() => reject('ETF connection timeout.'), 5000);
+			});
+
+			await Promise.race([
+				api.current.init(),
+				timeout
+			]);
 
       api.current.eventEmitter.on('blockHeader', () => {
         setLatestSlot(api.current.latestSlot)
@@ -37,7 +43,9 @@ export const EtfProvider: React.FC<EtfProviderProps> = (props) => {
 			setReady(true)
 		}
 
-		setup()
+		setup().catch((err) => {
+			console.error(err)
+		})
 	}, []);
 
 	return <EtfContext.Provider value={{ api: api.current, latestSlot, ready }}>{children}</EtfContext.Provider>;
