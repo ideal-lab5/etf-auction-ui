@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+/* import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { Etf } from '@ideallabs/etf.js';
 
 interface EtfContextValues {
@@ -50,3 +50,4 @@ export const EtfProvider: React.FC<EtfProviderProps> = (props) => {
 
 	return <EtfContext.Provider value={{ api: api.current, latestSlot, ready }}>{children}</EtfContext.Provider>;
 };
+ */
