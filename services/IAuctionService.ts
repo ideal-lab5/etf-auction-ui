@@ -1,4 +1,5 @@
+import { Auction } from "../domain/Auction";
+
 export interface IAuctionService {
-  getAuctionDetails: (auctionId: string) => void;
-  getBids: (auctionId: string) => void;
+  getPublishedAuctions: () => Auction[];
 }

@@ -9,7 +9,7 @@ import { AuctionService } from "../services/AuctionService";
 export default function Home() {
 
   //get the service instance
-  const AuctionServiceInstance = container.resolve(AuctionService);
+  const auctionServiceInstance = container.resolve(AuctionService);
   const [isConnected, setIsConnected] = useState(false);
   const [signer, setSigner] = useState(undefined);
   const [signerAddress, setSignerAddress] = useState("");
@@ -66,8 +66,8 @@ export default function Home() {
             {/* We've used 3xl here, but feel free to try other max-widths based on your needs */}
             {<div className="mx-auto max-w-4xl">
               {selectedOption.view === "apply" ?
-                <BidderView onChangeOption={onChangeOption} searchOptionSelected={selectedOption.option === 'search'} signer={signer} auctionServiceInstance={AuctionServiceInstance} /> :
-                <AuctioneerView signer={signer} auctionServiceInstance={AuctionServiceInstance} />}
+                <BidderView onChangeOption={onChangeOption} searchOptionSelected={selectedOption.option === 'search'} signer={signer} auctionServiceInstance={auctionServiceInstance} /> :
+                <AuctioneerView signer={signer} auctionServiceInstance={auctionServiceInstance} />}
             </div>}
             {!hasMetaMask && <div className="alert alert-danger" role="alert"> You need Metamask to use this app.</div>}
             {!isSupportedNetwork && <div className="alert alert-danger" role="alert"> Etf Auctions is currently in beta. Only available on Goerli Tesnet. Change your metamask network!</div>}
