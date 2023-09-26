@@ -12,11 +12,13 @@ export default function Auctions({ signer, auctionServiceInstance }) {
 
     const [publishedAuctions, setPublishedAuctions] = useState([]);
     const [processing, setProcessing] = useState(false);
+    const [currentTab, setCurrentTab] = useState(0);
 
     const queryAuctions = async () => {
         try {
             console.log('Loading auctions...');
-            //TODO: this should be a call to the contract
+            let auctions = await auctionServiceInstance.getPublishedAuctions();
+            setPublishedAuctions(auctions);
         } catch (e) {
             console.error(e);
         }
@@ -52,7 +54,24 @@ export default function Auctions({ signer, auctionServiceInstance }) {
         <div className="px-4 py-6 sm:px-6 lg:px-8">
             <div className="sm:flex sm:items-center">
                 <div className="sm:flex-auto">
-
+                    <span className="isolate inline-flex rounded-md shadow-sm">
+                        <button
+                            type="button"
+                            onClick={() => setCurrentTab(0)}
+                            className={currentTab !== 0 ? "relative inline-flex items-center rounded-l-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:z-10 focus:bg-gray-600 focus:text-white focus:outline-none" :
+                                "relative inline-flex items-center rounded-l-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium z-10 bg-gray-600 text-white outline-none"}
+                        >
+                            Published
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setCurrentTab(1)}
+                            className={currentTab !== 1 ? "relative -ml-px inline-flex items-center border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:z-10 focus:bg-gray-600 focus:text-white focus:outline-none" :
+                                "relative -ml-px inline-flex items-center border border-gray-300 bg-white px-4 py-2 text-sm font-medium z-10 bg-gray-600 text-white outline-none"}
+                        >
+                            Past
+                        </button>
+                    </span>
                 </div>
                 <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
                     <SearchBox />
@@ -67,7 +86,7 @@ export default function Auctions({ signer, auctionServiceInstance }) {
                             </th>
                             <th
                                 scope="col"
-                                className="hidden px-3 py-3.5 text-left text-sm font-semibold text-gray-900 lg:table-cell"
+                                className="hidden px-3 py-3.5 text-right text-sm font-semibold text-gray-900 lg:table-cell"
                             >
                                 Bids
                             </th>
@@ -98,8 +117,11 @@ export default function Auctions({ signer, auctionServiceInstance }) {
                         </tr>
                     </thead>
                     <tbody>
-                        {publishedAuctions.map((auction, auctionIndex) => (
-                            <tr key={auction._id}>
+                        {publishedAuctions.filter((element) => {
+                            if (currentTab === 0) return element.status === 1;
+                            if (currentTab === 1) return element.status === 2;
+                        }).map((auction, auctionIndex) => (
+                            <tr key={auction.id}>
                                 <td
                                     className={classNames(
                                         auctionIndex === 0 ? '' : 'border-t border-transparent',
@@ -114,7 +136,7 @@ export default function Auctions({ signer, auctionServiceInstance }) {
                                 <td
                                     className={classNames(
                                         auctionIndex === 0 ? '' : 'border-t border-gray-200',
-                                        'hidden px-3 py-3.5 text-sm text-gray-500 lg:table-cell'
+                                        'hidden px-3 py-3.5 text-sm text-right text-gray-500 lg:table-cell'
                                     )}
                                 >
                                     {auction.bids}
@@ -150,24 +172,34 @@ export default function Auctions({ signer, auctionServiceInstance }) {
                                         'hidden px-3 py-3.5 text-sm text-center text-gray-500 lg:table-cell'
                                     )}
                                 >
-                                    <Moment date={auction.deadLine} fromNow={true} />
+                                    <Moment date={auction.deadline} fromNow={true} />
                                 </td>
 
                                 <td
                                     className={classNames(
                                         auctionIndex === 0 ? '' : 'border-t border-transparent',
-                                        'relative py-3.5 pl-3 pr-4 sm:pr-6 text-right text-sm font-medium'
+                                        'relative py-3.5 pl-3 pr-4 sm:pr-6 text-center text-sm font-medium'
                                     )}
                                 >
-                                    <button
+                                    {auction.status === 1 && auction.deadline < new Date() ? <button
                                         type="button"
                                         onClick={() => onBid(auction)}
                                         className="inline-flex items-center rounded-md border border-gray-300 bg-indigo-600 px-3 py-2 text-sm font-medium leading-4 text-white shadow-sm hover:bg-indigo-700 focus:outline-none disabled:cursor-not-allowed disabled:opacity-30"
-                                        disabled={!signer || auction.isBid || processing}
+                                        disabled={!signer || processing}
                                         title={signer ? '' : 'Connect your wallet to bid'}
                                     >
-                                        {processing ? "Applying ..." : auction.isBid ? "Bid" : "Bid"} <span className="sr-only"></span>
-                                    </button>
+                                        {processing ? "Bidding..." : "Bid"} <span className="sr-only"></span>
+                                    </button> : auction.status === 1 && <button
+                                        type="button"
+                                        onClick={() => onComplete(auction)}
+                                        className="inline-flex items-center rounded-md border border-gray-300 bg-indigo-600 px-3 py-2 text-sm font-medium leading-4 text-white shadow-sm hover:bg-indigo-700 focus:outline-none disabled:cursor-not-allowed disabled:opacity-30"
+                                        disabled={!signer || processing}
+                                        title={signer ? '' : 'Connect your wallet to bid'}
+                                    >
+                                        {processing ? "Completing..." : "Complete"} <span className="sr-only"></span>
+                                    </button>}
+                                    {auction.status === 2 && <span className="inline-flex items-center rounded-md border border-gray-300 bg-gray-600 px-3 py-2 text-sm font-medium leading-4 text-white shadow-sm">
+                                        Completed</span>}
                                     {auctionIndex !== 0 ? <div className="absolute right-6 left-0 -top-px h-px bg-gray-200" /> : null}
                                 </td>
                             </tr>
