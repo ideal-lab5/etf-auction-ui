@@ -36,7 +36,7 @@ export default function Auctions({ signer, auctionServiceInstance }) {
             setProcessing(true);
             await auctionServiceInstance.cancelAuction(signer, auction.id);
             queryAuctions();
-            setCurrentTab(2);
+            setCurrentTab(1);
         } catch (e) {
             console.error(e);
         }
