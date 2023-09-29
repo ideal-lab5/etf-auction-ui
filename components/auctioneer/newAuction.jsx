@@ -1,28 +1,22 @@
 import { useState } from "react";
-import uuid from 'react-uuid';
 
-export default function NewAuction({ onCancel, onSave, signer }) {
+export default function NewAuction({ onCancel, onSave, signer, auctionServiceInstance }) {
 
     const [processing, setProcessing] = useState(false);
 
     const confirmNewAuction = async (event) => {
         event.preventDefault();
-        const newAuction = {
-            _id: uuid(),
-            title: event.target.jobTitle.value,
-            description: event.target.jobDescription.value,
-            company: event.target.company.value,
-            location: event.target.location.value,
-            bountyAmount: parseFloat(event.target.bounty.value),
-            salaryRange: event.target.salary.value,
-            createdAt: new Date().toISOString(),
-            positionsToFill: parseInt(event.target.positionsToFill.value),
-            recruiterAddress: await signer.getAddress(),
-            isPublished: false,
-            isClosed: false,
-        };
+
+        let result = await auctionServiceInstance.newAuction(
+            signer,
+            event.target.title.value,
+            event.target.assetId.value,
+            event.target.deadline.value,
+            event.target.salary.value
+        );
+
         setProcessing(true);
-        await onSave(newAuction);
+        await onSave(result);
         setProcessing(false);
     }
 
@@ -31,115 +25,68 @@ export default function NewAuction({ onCancel, onSave, signer }) {
             <div className="space-y-8 divide-y divide-gray-200">
                 <div className="pt-2">
                     <div>
-                        <h3 className="text-lg font-medium leading-6 text-gray-900">New job posting</h3>
+                        <h3 className="text-lg font-medium leading-6 text-gray-900">New Auction</h3>
                     </div>
                     <div className="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                        <div className="sm:col-span-2">
+                        <div className="sm:col-span-3">
                             <label htmlFor="first-name" className="block text-sm font-medium text-gray-700">
-                                Title *
+                                Name *
                             </label>
                             <div className="mt-1">
                                 <input
                                     type="text"
                                     required
-                                    name="jobTitle"
-                                    id="jobTitle"
-                                    placeholder="Ex. Software Engineer ..."
+                                    name="title"
+                                    id="title"
+                                    placeholder="Ex. Little Pony NFT ..."
                                     className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                 />
                             </div>
                         </div>
 
-                        <div className="sm:col-span-2">
+                        <div className="sm:col-span-3">
                             <label htmlFor="last-name" className="block text-sm font-medium text-gray-700">
-                                Company *
-                            </label>
-                            <div className="mt-1">
-                                <input
-                                    type="text"
-                                    required
-                                    name="company"
-                                    placeholder="Ex. Aave, Sushi ..."
-                                    id="company"
-                                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="sm:col-span-2">
-                            <label htmlFor="last-name" className="block text-sm font-medium text-gray-700">
-                                Location *
-                            </label>
-                            <div className="mt-1">
-                                <input
-                                    type="text"
-                                    required
-                                    name="location"
-                                    placeholder="Ex. Remote ..."
-                                    id="location"
-                                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="sm:col-span-2">
-                            <label htmlFor="last-name" className="block text-sm font-medium text-gray-700">
-                                Salary Range *
-                            </label>
-                            <div className="mt-1">
-                                <input
-                                    type="text"
-                                    name="salary"
-                                    required
-                                    placeholder="Ex. $100,000 to $150,000 ..."
-                                    id="salary"
-                                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="sm:col-span-2">
-                            <label htmlFor="first-name" className="block text-sm font-medium text-gray-700">
-                                Bounty <small>(Ether)</small> *
-                            </label>
-                            <div className="mt-1">
-                                <input
-                                    type="text"
-                                    name="bounty"
-                                    required
-                                    id="bounty"
-                                    placeholder="Ex. 10"
-                                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="sm:col-span-2">
-                            <label htmlFor="first-name" className="block text-sm font-medium text-gray-700">
-                                Positions to fill *
+                                NFT/Asset Id *
                             </label>
                             <div className="mt-1">
                                 <input
                                     type="number"
-                                    name="positionsToFill"
                                     required
-                                    id="positionsToFill"
-                                    placeholder="Ex. 2 ..."
+                                    name="assetId"
+                                    placeholder="Ex. 100"
+                                    id="assetId"
                                     className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                 />
                             </div>
                         </div>
 
-                        <div className="sm:col-span-6">
-                            <label htmlFor="street-address" className="block text-sm font-medium text-gray-700">
-                                Description *
+                        <div className="sm:col-span-3">
+                            <label htmlFor="last-name" className="block text-sm font-medium text-gray-700">
+                                Deadline *
                             </label>
                             <div className="mt-1">
-                                <textarea
-                                    name="jobDescription"
+                                <input
+                                    type="number"
                                     required
-                                    id="jobDescription"
-                                    rows={3}
+                                    name="deadline"
+                                    placeholder="Ex 123"
+                                    id="deadline"
+                                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="sm:col-span-3">
+                            <label htmlFor="last-name" className="block text-sm font-medium text-gray-700">
+                                Min deposit *
+                            </label>
+                            <div className="mt-1">
+                                <input
+                                    type="number"
+                                    name="salary"
+                                    required
+                                    placeholder="Ex. 100"
+                                    id="salary"
                                     className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                 />
                             </div>

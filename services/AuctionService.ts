@@ -1,53 +1,86 @@
 import { Auction, AuctionStatus } from "../domain/Auction";
 import { IAuctionService } from "./IAuctionService";
-import { injectable } from "tsyringe";
+import { injectable, singleton } from "tsyringe";
 
-@injectable()
+@singleton()
 export class AuctionService implements IAuctionService {
-  // init
+  //mock attribute representing the list of auctions
+  private mockAuctions: Auction[];
+
   constructor() {
     //TODO: implement startup logic
-  }
-
-  getPublishedAuctions(): Auction[] {
-    return [
+    console.log("Starting AuctionService");
+    this.mockAuctions = [
       new Auction(
         "1",
         "Auction 1",
-        5,
         1,
-        1,
-        "DOT",
+        10,
         new Date(),
-        new Date(new Date().getTime() - 1000 * 60 * 60 * 24 * 3),
+        new Date(new Date().getTime() - 1000 * 60 * 60 * 24 * 3).getTime(),
         "user1",
         AuctionStatus.Published,
       ),
       new Auction(
         "2",
         "Auction 2",
-        3,
-        1,
-        1,
-        "DOT",
+        2,
+        10,
         new Date(),
-        new Date( new Date().getTime() + 1000 * 60 * 60 * 24 * 2),
+        new Date( new Date().getTime() + 1000 * 60 * 60 * 24 * 2).getTime(),
         "user2",
         AuctionStatus.Published,
       ),
       new Auction(
         "3",
         "Auction 4",
+        3,
         10,
-        1,
-        1,
-        "DOT",
         new Date(),
-        new Date( new Date().getTime() - 1000 * 60 * 60 * 24 * 10),
+        new Date( new Date().getTime() - 1000 * 60 * 60 * 24 * 10).getTime(),
         "user3",
         AuctionStatus.Completed,
       ),
     ];
   }
+  async cancelAuction (signer: any, auctionId: string): Promise<Auction> {
+      let auction = this.mockAuctions.find(auction => auction.id === auctionId && auction.owner === signer);
+      if(auction){
+        auction.status = AuctionStatus.Canceled;
+      }
+      return Promise.resolve(auction);
+  }
+  async newAuction(signer: any, title: string, assetId: number, deadline: number, deposit: number): Promise<Auction> {
 
+    let auction = new Auction(
+      this.mockAuctions.length.toString(), //id based on the length of the list ... it should be deployed contract id
+      title,
+      assetId,
+      deposit,
+      new Date(),
+      deadline,
+      signer,
+      AuctionStatus.Published,
+    )
+
+    this.mockAuctions.push(auction);
+    return Promise.resolve(auction);
+  }
+  async completeAuction(signer: any, auctionId: string): Promise<Auction> {
+    let auction = this.mockAuctions.find(auction => auction.id === auctionId);
+    if(auction){
+     auction.status = AuctionStatus.Completed;
+    }
+    return Promise.resolve(auction);
+  }
+  getPublishedAuctions(): Auction[] {
+    return this.mockAuctions
+  }
+
+  getMyAuctions(owner: any): Auction[] {
+    return this.mockAuctions.filter(auction => auction.owner === owner);
+  }
+  getMyBids(bidder: any): Auction[] {
+    return [];
+  }
 }
