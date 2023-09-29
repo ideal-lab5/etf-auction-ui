@@ -10,8 +10,8 @@ export default function Home() {
 
   //get the service instance
   const auctionServiceInstance = container.resolve(AuctionService);
-  const [isConnected, setIsConnected] = useState(false);
-  const [signer, setSigner] = useState(undefined);
+  const [isConnected, setIsConnected] = useState(true);
+  const [signer, setSigner] = useState("0xC6Aa55EC5d4F7Ed859Aa8d5B560000516d441776");
   const [signerAddress, setSignerAddress] = useState("");
   const [provider, setProvider] = useState(undefined);
   const [isSupportedNetwork, setIsSupportedNetwork] = useState(true);

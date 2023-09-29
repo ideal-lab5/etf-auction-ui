@@ -1,8 +1,6 @@
 import SearchBox from "../searchBox"
 import Moment from 'react-moment';
-import { container } from "tsyringe";
 import { useEffect, useState } from "react";
-import uuid from 'react-uuid';
 
 function classNames(...classes) {
     return classes.filter(Boolean).join(' ')
@@ -36,8 +34,10 @@ export default function Auctions({ signer, auctionServiceInstance }) {
 
     const onComplete = async (auction) => {
         try {
+            console.log('Completing...');
             setProcessing(true);
-            // TODO: handle auction completion
+            await auctionServiceInstance.completeAuction(signer, auction.id);
+            queryAuctions();
         } catch (e) {
             console.error(e);
         }
@@ -172,7 +172,7 @@ export default function Auctions({ signer, auctionServiceInstance }) {
                                         'hidden px-3 py-3.5 text-sm text-center text-gray-500 lg:table-cell'
                                     )}
                                 >
-                                    <Moment date={auction.deadline} fromNow={true} />
+                                    {auction.deadline}
                                 </td>
 
                                 <td
@@ -200,6 +200,8 @@ export default function Auctions({ signer, auctionServiceInstance }) {
                                     </button>}
                                     {auction.status === 2 && <span className="inline-flex items-center rounded-md border border-gray-300 bg-gray-600 px-3 py-2 text-sm font-medium leading-4 text-white shadow-sm">
                                         Completed</span>}
+                                    {auction.status === 3 && <span className="inline-flex items-center rounded-md border border-gray-300 bg-gray-600 px-3 py-2 text-sm font-medium leading-4 text-white shadow-sm">
+                                        Canceled</span>}
                                     {auctionIndex !== 0 ? <div className="absolute right-6 left-0 -top-px h-px bg-gray-200" /> : null}
                                 </td>
                             </tr>

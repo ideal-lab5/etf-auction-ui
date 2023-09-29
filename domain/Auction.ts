@@ -9,39 +9,42 @@ export enum AuctionStatus {
  * This is the Auction domain class. It is used to represent an auction.
 */  
 export class Auction {
-     id: string
-     title: string
-     bids: number
-     units: number
-     minBid: number
-     minBidUnit: string
-     publishedAt: Date
-     deadline: Date
-     owner: string
-     status: AuctionStatus
+     id: string;
+     title: string;
+     assetId: number;
+     deposit: number;
+     bids: number;
+     units: number;
+     minBid: number;
+     minBidUnit: string;
+     publishedAt: Date;
+     deadline: number;
+     owner: string;
+     status: AuctionStatus;
 
     constructor(
       id: string,
       title: string,
-      bids: number,
-      units: number,
-      minBid: number,
-      minBidUnit: string,
+      assetId: number,
+      deposit: number,
       publishedAt: Date,
-      deadline: Date,
+      deadline: number,
       owner: string,
       status: AuctionStatus
     ) {
-      this.id = id
-      this.title = title
-      this.bids = bids
-      this.units = units
-      this.minBid = minBid
-      this.minBidUnit = minBidUnit
-      this.publishedAt = publishedAt
-      this.deadline = deadline
-      this.owner = owner
-      this.status = status
+      this.id = id;
+      this.title = title;
+      this.assetId = assetId;
+      this.deposit = deposit;
+      this.bids = 0;
+      this.units = 0;
+      this.minBid = 0;
+      this.minBidUnit = "";
+      this.publishedAt = publishedAt;
+      this.deadline = deadline;
+      this.owner = owner;
+      this.status = status;
     }
+
   }
   
