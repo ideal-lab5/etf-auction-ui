@@ -1,15 +1,19 @@
 import { Auction, AuctionStatus } from "../domain/Auction";
 import { IAuctionService } from "./IAuctionService";
-import { injectable, singleton } from "tsyringe";
+import { singleton } from "tsyringe";
+import contractMetadata from '../assets/proxy/tlock_proxy.json';
+import contractData from '../assets/proxy/tlock_proxy.contract.json';
 
 @singleton()
 export class AuctionService implements IAuctionService {
   //mock attribute representing the list of auctions
   private mockAuctions: Auction[];
+  private api: any;
 
   constructor() {
     //TODO: implement startup logic
     console.log("Starting AuctionService");
+
     this.mockAuctions = [
       new Auction(
         "1",
