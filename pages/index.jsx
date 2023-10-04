@@ -1,6 +1,7 @@
 import Head from "next/head";
 import { useEffect, useState } from "react";
 import { container } from "tsyringe";
+import { Keyring } from '@polkadot/api';
 import BidderView from "../components/bidder/bidderView";
 import Header from "../components/header";
 import AuctioneerView from "../components/auctioneer/auctioneerView";
@@ -10,8 +11,8 @@ export default function Home() {
 
   //get the service instance
   const auctionServiceInstance = container.resolve(AuctionService);
-  const [isConnected, setIsConnected] = useState(true);
-  const [signer, setSigner] = useState("0xC6Aa55EC5d4F7Ed859Aa8d5B560000516d441776");
+  const [isConnected, setIsConnected] = useState(false);
+  const [signer, setSigner] = useState(null);
   const [signerAddress, setSignerAddress] = useState("");
   const [provider, setProvider] = useState(undefined);
   const [isSupportedNetwork, setIsSupportedNetwork] = useState(true);
@@ -38,7 +39,11 @@ export default function Home() {
   }
 
   async function connect() {
-    //TODO implement connection logic
+    const keyring = new Keyring();
+    const alice = keyring.addFromUri('//Alice', { name: 'Alice' }, 'sr25519');
+    setSigner(alice);
+    setIsConnected(true);
+    //TODO implement connection logic usin g wallet api / connector
   }
 
   useEffect(() => {

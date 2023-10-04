@@ -15,7 +15,7 @@ export default function Auctions({ signer, auctionServiceInstance }) {
     const queryAuctions = async () => {
         try {
             console.log('Loading auctions...');
-            let auctions = await auctionServiceInstance.getPublishedAuctions();
+            let auctions = await auctionServiceInstance.getPublishedAuctions(signer);
             setPublishedAuctions(auctions);
         } catch (e) {
             console.error(e);
