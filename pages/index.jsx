@@ -39,11 +39,18 @@ export default function Home() {
   }
 
   async function connect() {
-    const keyring = new Keyring();
-    const alice = keyring.addFromUri('//Alice', { name: 'Alice' }, 'sr25519');
-    setSigner(alice);
-    setIsConnected(true);
-    //TODO implement connection logic usin g wallet api / connector
+    if (typeof window !== "undefined") {
+      // Client-side-only code
+      const ext = await import("@polkadot/extension-dapp");
+      const _ = await ext.web3Enable('etf-auction')
+      const allAccounts = await ext.web3Accounts()
+      const defaultAddress = allAccounts[0].address;
+      // finds an injector for an address
+      const injector = await ext.web3FromAddress(defaultAddress);
+      setSigner(injector.signer)
+      setSignerAddress(defaultAddress)
+      setIsConnected(true)
+    }
   }
 
   useEffect(() => {
