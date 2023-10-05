@@ -1,7 +1,6 @@
 import Head from "next/head";
 import { useEffect, useState } from "react";
 import { container } from "tsyringe";
-import { Keyring } from '@polkadot/api';
 import BidderView from "../components/bidder/bidderView";
 import Header from "../components/header";
 import AuctioneerView from "../components/auctioneer/auctioneerView";
@@ -14,9 +13,7 @@ export default function Home() {
   const [isConnected, setIsConnected] = useState(false);
   const [signer, setSigner] = useState(null);
   const [signerAddress, setSignerAddress] = useState("");
-  const [provider, setProvider] = useState(undefined);
   const [isSupportedNetwork, setIsSupportedNetwork] = useState(true);
-  const [hasMetaMask, setHasMetaMask] = useState(true);
   const [selectedOption, setSelectedOption] = useState({
     view: "apply",
     option: "search"
@@ -81,8 +78,7 @@ export default function Home() {
                 <BidderView onChangeOption={onChangeOption} searchOptionSelected={selectedOption.option === 'search'} signer={signer} auctionServiceInstance={auctionServiceInstance} /> :
                 <AuctioneerView signer={signer} auctionServiceInstance={auctionServiceInstance} />}
             </div>}
-            {!hasMetaMask && <div className="alert alert-danger" role="alert"> You need Metamask to use this app.</div>}
-            {!isSupportedNetwork && <div className="alert alert-danger" role="alert"> Etf Auctions is currently in beta. Only available on Goerli Tesnet. Change your metamask network!</div>}
+            {!isSupportedNetwork && <div className="alert alert-danger" role="alert"> Etf Auctions is currently in beta. Only available on .... network!</div>}
             <footer className="bg-white">
               <div className="mt-8 border-t border-gray-200 pt-8 md:flex md:items-center md:justify-between">
                 <div className="flex space-x-6 md:order-2">
