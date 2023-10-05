@@ -115,6 +115,8 @@ export class AuctionService implements IAuctionService {
     )
 
     this.mockAuctions.push(auction);
+
+    return Promise.resolve(auction);
   }
 
   async bid(signer: any, auctionId: string, amount: number): Promise<any> {
