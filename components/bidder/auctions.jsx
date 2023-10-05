@@ -45,10 +45,10 @@ export default function Auctions({ signer, auctionServiceInstance }) {
     }
 
     useEffect(() => {
-
-        queryAuctions();
-
-    }, []);
+        if (signer !== null) {
+            queryAuctions();
+        }
+    }, [signer]);
 
     return (
         <div className="px-4 py-6 sm:px-6 lg:px-8">
