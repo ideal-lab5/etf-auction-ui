@@ -5,8 +5,6 @@ import { ContractPromise, CodePromise } from '@polkadot/api-contract';
 import { blake2AsHex, cryptoWaitReady } from '@polkadot/util-crypto';
 import { SHA3 } from 'sha3';
 import { BN, BN_ONE } from "@polkadot/util";
-import { Etf } from "@ideallabs/etf.js";
-
 import contractMetadata from '../assets/proxy/tlock_proxy.json';
 import contractData from '../assets/proxy/tlock_proxy.contract.json';
 import { CONTRACT_ADDRESS, NODE_DETAILS } from "./constants";
@@ -63,7 +61,8 @@ export class AuctionService implements IAuctionService {
   async getEtfApi(): Promise<any> {
     if (!this.api) {
       await cryptoWaitReady()
-      let api = new Etf(NODE_DETAILS.url, NODE_DETAILS.port);
+      const etfjs = await import('@ideallabs/etf.js');
+      let api = new etfjs.Etf(NODE_DETAILS.url, NODE_DETAILS.port);
       await api.init(JSON.stringify(chainSpec));
       this.api = api;
       //Loading proxy contract
