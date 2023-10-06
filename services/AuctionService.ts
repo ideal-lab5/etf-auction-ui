@@ -6,7 +6,6 @@ import { blake2AsHex, cryptoWaitReady } from '@polkadot/util-crypto';
 import { SHA3 } from 'sha3';
 import { BN, BN_ONE } from "@polkadot/util";
 import contractMetadata from '../assets/proxy/tlock_proxy.json';
-import contractData from '../assets/proxy/tlock_proxy.contract.json';
 import { CONTRACT_ADDRESS, NODE_DETAILS } from "./constants";
 import chainSpec from "../assets/etfTestSpecRaw.json";
 
@@ -58,7 +57,7 @@ export class AuctionService implements IAuctionService {
     ];
   }
 
-  async getEtfApi(): Promise<any> {
+  async getEtfApi(signer = undefined): Promise<any> {
     if (!this.api) {
       await cryptoWaitReady()
       const etfjs = await import('@ideallabs/etf.js');
@@ -67,6 +66,9 @@ export class AuctionService implements IAuctionService {
       this.api = api;
       //Loading proxy contract
       this.contract = new ContractPromise(this.api.api, contractMetadata, CONTRACT_ADDRESS);
+    }
+    if (signer) {
+      this.api.api.setSigner(signer);
     }
     return Promise.resolve(this.api);
   }
@@ -80,7 +82,8 @@ export class AuctionService implements IAuctionService {
   }
 
   async newAuction(signer: any, title: string, assetId: number, deadline: number, deposit: number): Promise<Auction> {
-    let api = await this.getEtfApi();
+    let api = await this.getEtfApi(signer.signer);
+
     let result = await this.contract.tx
       .newAuction({
         gasLimit: api.api.registry.createType('WeightV2', {
@@ -93,7 +96,7 @@ export class AuctionService implements IAuctionService {
         assetId,
         deadline,
         deposit,
-      ).signAndSend(signer, result => {
+      ).signAndSend(signer.address, result => {
         if (result.status.isInBlock) {
           console.log(result.toHuman().Ok)
           console.log('auction created');
@@ -120,7 +123,7 @@ export class AuctionService implements IAuctionService {
   }
 
   async bid(signer: any, auctionId: string, amount: number): Promise<any> {
-    let api = await this.getEtfApi();
+    let api = await this.getEtfApi(signer.signer);
     let amountString = amount.toString();
     const hasher = new SHA3(256)
     hasher.update(amountString);
@@ -144,7 +147,7 @@ export class AuctionService implements IAuctionService {
         timelockedBid.ct.aes_ct.nonce,
         timelockedBid.ct.etf_ct[0],
         Array.from(hash),
-      ).signAndSend(signer, result => {
+      ).signAndSend(signer.address, result => {
         if (result.status.isInBlock) {
           console.log('in a block');
           console.log(result.toHuman().Ok);
@@ -159,7 +162,7 @@ export class AuctionService implements IAuctionService {
   }
 
   async completeAuction(signer: any, auctionId: string): Promise<Auction> {
-    let api = await this.getEtfApi();
+    let api = await this.getEtfApi(signer.signer);
     let secrets = await api.secrets(this.getSlots());
     // P \in G2
     let ibePubkey = Array.from(api.ibePubkey);
@@ -176,7 +179,7 @@ export class AuctionService implements IAuctionService {
       },
         auctionId, //ibePubkey
         Array.from(secrets[0])
-      ).signAndSend(signer, result => {
+      ).signAndSend(signer.address, result => {
         if (result.isErr) {
           const errorMsg = result.toJSON();
           console.log(errorMsg)
@@ -200,7 +203,7 @@ export class AuctionService implements IAuctionService {
   async getPublishedAuctions(signer: any): Promise<Auction[]> {
     let api = await this.getEtfApi();
     const storageDepositLimit = null
-    const { result, output } = await this.contract.query.get_auctions(
+    const { result, output } = await this.contract.query.getAuctions(
       signer.address,
       {
         gasLimit: api.registry.createType('WeightV2', {
@@ -219,7 +222,7 @@ export class AuctionService implements IAuctionService {
   async getMyAuctions(owner: any): Promise<Auction[]> {
     let api = await this.getEtfApi();
     const storageDepositLimit = null
-    const { result, output } = await this.contract.query.get_auctions_by_owner(
+    const { result, output } = await this.contract.query.getAuctionsByOwner(
       owner.address,
       {
         gasLimit: api.registry.createType('WeightV2', {

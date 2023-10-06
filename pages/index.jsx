@@ -44,7 +44,7 @@ export default function Home() {
       const defaultAddress = allAccounts[0].address;
       // finds an injector for an address
       const injector = await ext.web3FromAddress(defaultAddress);
-      setSigner(injector.signer)
+      setSigner({ signer: injector.signer, address: defaultAddress })
       setSignerAddress(defaultAddress)
       setIsConnected(true)
     }
