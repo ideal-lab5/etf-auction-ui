@@ -16,7 +16,7 @@ export class Auction {
   units: number;
   minBid: number;
   minBidUnit: string;
-  publishedAt: Date;
+  publishedAt: any;
   deadline: number;
   owner: string;
   status: AuctionStatus;
@@ -26,7 +26,7 @@ export class Auction {
     title: string,
     assetId: number,
     deposit: number,
-    publishedAt: Date,
+    publishedAt: any,
     deadline: number,
     owner: string,
     status: AuctionStatus
