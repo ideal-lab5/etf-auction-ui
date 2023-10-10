@@ -7,6 +7,7 @@ import { SHA3 } from 'sha3';
 import { BN, BN_ONE } from "@polkadot/util";
 import contractMetadata from '../assets/proxy/tlock_proxy.json';
 import chainSpec from "../assets/etfTestSpecRaw.json";
+import { SubmittableResult } from "@polkadot/api";
 
 @singleton()
 export class AuctionService implements IAuctionService {
@@ -66,7 +67,7 @@ export class AuctionService implements IAuctionService {
     return Promise.resolve(auction);
   }
 
-  async newAuction(signer: any, title: string, assetId: number, deadline: number, deposit: number): Promise<Auction> {
+  async newAuction(signer: any, title: string, assetId: number, deadline: number, deposit: number): Promise<boolean> {
     let api = await this.getEtfApi(signer.signer);
     let dateInSeconds = new Date(new Date().getDate() + deadline).getTime() / 1000;
     let distance = this.calculateEstimatedDistance(dateInSeconds, this.SHARES, this.THRESHOLD, this.TIME);
@@ -79,38 +80,40 @@ export class AuctionService implements IAuctionService {
       distance
     });
     console.log("slotSchedule:", slotSchedule);
-    let { output } = await this.contract.tx
-      .newAuction({
-        gasLimit: api.api.registry.createType('WeightV2', {
-          refTime: this.MAX_CALL_WEIGHT2,
-          proofSize: this.PROOFSIZE,
-        }),
-        storageDepositLimit: null,
-      },
-        title,
-        assetId,
-        slotSchedule[0],
-        deposit,
-      ).signAndSend(signer.address, result => {
-        if (result.status.isInBlock) {
-          console.log(result.toHuman().Ok)
-          console.log('auction created');
-        } else if (result.status.isFinalized) {
-          console.log('finalized');
+    async function sendContractTx(contract: any, api: any, auctionService: AuctionService): Promise<SubmittableResult> {
+      return new Promise(async (resolve, reject) => {
+        try {
+          await contract.tx
+            .newAuction({
+              gasLimit: api.api.registry.createType('WeightV2', {
+                refTime: auctionService.MAX_CALL_WEIGHT2,
+                proofSize: auctionService.PROOFSIZE,
+              }),
+              storageDepositLimit: null,
+            },
+              title,
+              assetId,
+              slotSchedule[0],
+              deposit,
+            ).signAndSend(signer.address, (result: SubmittableResult) => {
+              // Log the transaction status
+              console.log('Transaction status:', result.status.type);
+              if (result.status.isInBlock || result.status.isFinalized) {
+                console.log(`Transaction included in block hash ${result.status.asInBlock}`);
+                resolve(result);
+              }
+
+            });
+        } catch (error) {
+          // Reject the promise if any error arises
+          console.log(error);
+          reject(error);
         }
       });
-    console.log('auction created', output?.toHuman()?.Ok.Ok);
-    let auction = new Auction(
-      output?.toHuman()?.Ok.Ok, //id of deployed contract id
-      title,
-      assetId,
-      deposit,
-      new Date(),
-      slotSchedule[0],
-      signer,
-      AuctionStatus.Published,
-    )
-    return Promise.resolve(auction);
+    };
+
+    await sendContractTx(this.contract, api, this);
+    return Promise.resolve(true);
   }
 
   async bid(signer: any, auctionId: string, deadline: number, amount: number): Promise<any> {
@@ -119,8 +122,10 @@ export class AuctionService implements IAuctionService {
     const hasher = new SHA3(256)
     hasher.update(amountString);
     const hash = hasher.digest();
+    hasher.update(new Date().getTime().toString());
+    const seed = hasher.digest();
     // the seed shouldn't be reused
-    let timelockedBid = api.encrypt(amountString, 1, [deadline], "testing234");
+    let timelockedBid = api.encrypt(amountString, 1, [deadline], seed);
     // now we want to call the publish function of the contract
     const value = 1000000;
     // call the publish function of the contract
