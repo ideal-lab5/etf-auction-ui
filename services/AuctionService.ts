@@ -17,6 +17,20 @@ export class AuctionService implements IAuctionService {
   private readonly MAX_CALL_WEIGHT2 = new BN(1_000_000_000_000).isub(BN_ONE);
   private readonly MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE);
   private readonly PROOFSIZE = new BN(1_000_000_000);
+  // custom types for the auction structs
+  private readonly CUSTOM_TYPES = {
+    Proposal: {
+      ciphertext: 'Vec<u8>',
+      nonce: 'Vec<u8>',
+      capsule: 'Vec<u8>',
+      commitment: 'Vec<u8>',
+    },
+    AuctionResult: {
+      winner: 'AccountId',
+      debt: 'Balance'
+    }
+  };
+
 
   constructor() {
     //TODO: remove mock implementation
@@ -60,11 +74,13 @@ export class AuctionService implements IAuctionService {
     if (!this.api) {
       await cryptoWaitReady()
       const etfjs = await import('@ideallabs/etf.js');
-      let api = new etfjs.Etf(process.env.NODE_DETAILS);
-      await api.init(JSON.stringify(chainSpec));
+      let api = new etfjs.Etf(process.env.NEXT_PUBLIC_NODE_DETAILS);
+      console.log("Connecting to ETF chain");
+      console.log(JSON.stringify(chainSpec));
+      await api.init(JSON.stringify(chainSpec), this.CUSTOM_TYPES);
       this.api = api;
       //Loading proxy contract
-      this.contract = new ContractPromise(this.api.api, contractMetadata, process.env.CONTRACT_ADDRESS);
+      this.contract = new ContractPromise(this.api.api, contractMetadata, process.env.NEXT_PUBLIC_CONTRACT_ADDRESS);
     }
     if (signer) {
       this.api.api.setSigner(signer);
