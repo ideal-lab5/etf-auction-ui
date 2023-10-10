@@ -1,12 +1,11 @@
 import { Auction, AuctionStatus } from "../domain/Auction";
 import { IAuctionService } from "./IAuctionService";
 import { singleton } from "tsyringe";
-import { ContractPromise, CodePromise } from '@polkadot/api-contract';
-import { blake2AsHex, cryptoWaitReady } from '@polkadot/util-crypto';
+import { ContractPromise } from '@polkadot/api-contract';
+import { cryptoWaitReady } from '@polkadot/util-crypto';
 import { SHA3 } from 'sha3';
 import { BN, BN_ONE } from "@polkadot/util";
 import contractMetadata from '../assets/proxy/tlock_proxy.json';
-import { CONTRACT_ADDRESS, NODE_DETAILS } from "./constants";
 import chainSpec from "../assets/etfTestSpecRaw.json";
 
 @singleton()
@@ -61,11 +60,11 @@ export class AuctionService implements IAuctionService {
     if (!this.api) {
       await cryptoWaitReady()
       const etfjs = await import('@ideallabs/etf.js');
-      let api = new etfjs.Etf(NODE_DETAILS.url, NODE_DETAILS.port);
+      let api = new etfjs.Etf(process.env.NODE_DETAILS);
       await api.init(JSON.stringify(chainSpec));
       this.api = api;
       //Loading proxy contract
-      this.contract = new ContractPromise(this.api.api, contractMetadata, CONTRACT_ADDRESS);
+      this.contract = new ContractPromise(this.api.api, contractMetadata, process.env.CONTRACT_ADDRESS);
     }
     if (signer) {
       this.api.api.setSigner(signer);
