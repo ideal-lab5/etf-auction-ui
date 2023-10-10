@@ -152,9 +152,9 @@ export class AuctionService implements IAuctionService {
     return Promise.resolve(auction);
   }
 
-  async completeAuction(signer: any, auctionId: string): Promise<Auction> {
+  async completeAuction(signer: any, auctionId: string, deadline: number): Promise<Auction> {
     let api = await this.getEtfApi(signer.signer);
-    let secrets = await api.secrets(this.getSlots());
+    let secrets = await api.secrets([deadline]);
     // P \in G2
     let ibePubkey = Array.from(api.ibePubkey);
     console.log(ibePubkey)
