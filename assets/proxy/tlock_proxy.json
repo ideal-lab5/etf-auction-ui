@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0x3d6982ed7c3a07fad7161333c8e1ffc5dcb094d5dec92767d1e488d77768631a",
+    "hash": "0x27267607b2d49e0bf8973fb2bd47a8a6c3f799bd4052a4657845f9a8513fd3c7",
     "language": "ink! 4.3.0",
     "compiler": "rustc 1.74.0-nightly",
     "build_info": {
@@ -638,6 +638,11 @@
                 "name": "deadline",
                 "type": 8,
                 "typeName": "u64"
+              },
+              {
+                "name": "published",
+                "type": 8,
+                "typeName": "Timestamp"
               },
               {
                 "name": "status",
