@@ -8,5 +8,5 @@ export interface IAuctionService {
   cancelAuction: (signer: any, auctionId: string) => Promise<any>;
   completeAuction: (signer: any, auctionId: string) => Promise<any>;
   getEtfApi: () => Promise<any>;
-  bid: (signer: any, auctionId: string, amount: number) => Promise<any>;
+  bid: (signer: any, auctionId: string, deadline: number, amount: number) => Promise<any>;
 }

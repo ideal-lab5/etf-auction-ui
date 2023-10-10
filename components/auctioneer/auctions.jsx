@@ -136,8 +136,8 @@ export default function Auctions({ signer, auctionServiceInstance }) {
                             </thead>
                             <tbody>
                                 {auctions.filter((element) => {
-                                    if (currentTab === 0) return element.status === 1;
-                                    if (currentTab === 1) return element.status === 2 || element.status === 3;
+                                    if (currentTab === 0) return element.status === 0;
+                                    if (currentTab === 1) return element.status === 1 || element.status === 2;
                                 }).map((auction, auctionIndex) => (
                                     <tr key={auction.id}>
                                         <td

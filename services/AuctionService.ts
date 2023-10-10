@@ -17,6 +17,9 @@ export class AuctionService implements IAuctionService {
   private readonly MAX_CALL_WEIGHT2 = new BN(1_000_000_000_000).isub(BN_ONE);
   private readonly MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE);
   private readonly PROOFSIZE = new BN(1_000_000_000);
+  private readonly SHARES = 1;
+  private readonly THRESHOLD = 1;
+  private readonly TIME = 10; //seconds
   // custom types for the auction structs
   private readonly CUSTOM_TYPES = {
     Proposal: {
@@ -35,39 +38,7 @@ export class AuctionService implements IAuctionService {
   constructor() {
     //TODO: remove mock implementation
     console.log("Starting AuctionService");
-
-    this.mockAuctions = [
-      new Auction(
-        "1",
-        "Auction 1",
-        1,
-        10,
-        new Date(),
-        new Date(new Date().getTime() - 1000 * 60 * 60 * 24 * 3).getTime(),
-        "user1",
-        AuctionStatus.Published,
-      ),
-      new Auction(
-        "2",
-        "Auction 2",
-        2,
-        10,
-        new Date(),
-        new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 2).getTime(),
-        "user2",
-        AuctionStatus.Published,
-      ),
-      new Auction(
-        "3",
-        "Auction 4",
-        3,
-        10,
-        new Date(),
-        new Date(new Date().getTime() - 1000 * 60 * 60 * 24 * 10).getTime(),
-        "user3",
-        AuctionStatus.Completed,
-      ),
-    ];
+    this.mockAuctions = [];
   }
 
   async getEtfApi(signer = undefined): Promise<any> {
@@ -76,7 +47,6 @@ export class AuctionService implements IAuctionService {
       const etfjs = await import('@ideallabs/etf.js');
       let api = new etfjs.Etf(process.env.NEXT_PUBLIC_NODE_DETAILS);
       console.log("Connecting to ETF chain");
-      console.log(JSON.stringify(chainSpec));
       await api.init(JSON.stringify(chainSpec), this.CUSTOM_TYPES);
       this.api = api;
       //Loading proxy contract
@@ -98,8 +68,18 @@ export class AuctionService implements IAuctionService {
 
   async newAuction(signer: any, title: string, assetId: number, deadline: number, deposit: number): Promise<Auction> {
     let api = await this.getEtfApi(signer.signer);
-
-    let result = await this.contract.tx
+    let dateInSeconds = new Date(new Date().getDate() + deadline).getTime() / 1000;
+    let distance = this.calculateEstimatedDistance(dateInSeconds, this.SHARES, this.THRESHOLD, this.TIME);
+    console.log("distance:", distance);
+    const etfjs = await import('@ideallabs/etf.js');
+    const slotScheduler = new etfjs.DistanceBasedSlotScheduler();
+    let slotSchedule = slotScheduler.generateSchedule({
+      slotAmount: this.SHARES,
+      currentSlot: parseInt(api.latestSlot.slot.replaceAll(",", "")),
+      distance
+    });
+    console.log("slotSchedule:", slotSchedule);
+    let { output } = await this.contract.tx
       .newAuction({
         gasLimit: api.api.registry.createType('WeightV2', {
           refTime: this.MAX_CALL_WEIGHT2,
@@ -109,7 +89,7 @@ export class AuctionService implements IAuctionService {
       },
         title,
         assetId,
-        deadline,
+        slotSchedule[0],
         deposit,
       ).signAndSend(signer.address, result => {
         if (result.status.isInBlock) {
@@ -119,36 +99,32 @@ export class AuctionService implements IAuctionService {
           console.log('finalized');
         }
       });
-
-    //TODO remove mock implementation
+    console.log('auction created', output?.toHuman()?.Ok.Ok);
     let auction = new Auction(
-      this.mockAuctions.length.toString(), //id based on the length of the list ... it should be deployed contract id
+      output?.toHuman()?.Ok.Ok, //id of deployed contract id
       title,
       assetId,
       deposit,
       new Date(),
-      deadline,
+      slotSchedule[0],
       signer,
       AuctionStatus.Published,
     )
-
-    this.mockAuctions.push(auction);
-
     return Promise.resolve(auction);
   }
 
-  async bid(signer: any, auctionId: string, amount: number): Promise<any> {
+  async bid(signer: any, auctionId: string, deadline: number, amount: number): Promise<any> {
     let api = await this.getEtfApi(signer.signer);
     let amountString = amount.toString();
     const hasher = new SHA3(256)
     hasher.update(amountString);
     const hash = hasher.digest();
     // the seed shouldn't be reused
-    let timelockedBid = api.encrypt(amountString, 1, this.getSlots(), "testing234");
+    let timelockedBid = api.encrypt(amountString, 1, [deadline], "testing234");
     // now we want to call the publish function of the contract
     const value = 1000000;
     // call the publish function of the contract
-    let result = await this.contract.tx
+    let { output } = await this.contract.tx
       .bid({
         gasLimit: api.api.registry.createType('WeightV2', {
           refTime: this.MAX_CALL_WEIGHT2,
@@ -218,7 +194,7 @@ export class AuctionService implements IAuctionService {
   async getPublishedAuctions(signer: any): Promise<Auction[]> {
     let api = await this.getEtfApi();
     const storageDepositLimit = null
-    const { result, output } = await this.contract.query.getAuctions(
+    const { output } = await this.contract.query.getAuctions(
       signer.address,
       {
         gasLimit: api.registry.createType('WeightV2', {
@@ -228,16 +204,27 @@ export class AuctionService implements IAuctionService {
         storageDepositLimit,
       }
     );
+    console.log(output?.toHuman()?.Ok.Ok);
+    let auctions = (output?.toHuman()?.Ok?.Ok || []).map((value) => {
+      return new Auction(
+        value.auctionId,
+        value.name,
+        value.assetId,
+        value.deposit,
+        value.published, //published date is not currently part of auction's storage
+        parseInt(value.deadline),
+        value.owner,
+        parseInt(value.status),
+      )
+    });
 
-    console.log(result.toHuman())
-    //TODO process response and return Auction[]
-    return Promise.resolve(this.mockAuctions);
+    return Promise.resolve(auctions);
   }
 
   async getMyAuctions(owner: any): Promise<Auction[]> {
     let api = await this.getEtfApi();
     const storageDepositLimit = null
-    const { result, output } = await this.contract.query.getAuctionsByOwner(
+    const { output } = await this.contract.query.getAuctionsByOwner(
       owner.address,
       {
         gasLimit: api.registry.createType('WeightV2', {
@@ -248,18 +235,57 @@ export class AuctionService implements IAuctionService {
       },
       owner.address
     );
+    console.log(output?.toHuman()?.Ok.Ok);
+    let auctions = (output?.toHuman()?.Ok?.Ok || []).map((value) => {
+      return new Auction(
+        value.auctionId,
+        value.name,
+        value.assetId,
+        value.deposit,
+        value.published, //published date is not currently part of auction's storage
+        parseInt(value.deadline),
+        value.owner,
+        parseInt(value.status),
+      )
+    });
 
-    console.log(result.toHuman())
-
-    //TODO process response and return Auction[]
-    return Promise.resolve(this.mockAuctions.filter(auction => auction.owner === owner));
+    return Promise.resolve(auctions);
   }
 
   getMyBids(bidder: any): Promise<Auction[]> {
     return Promise.resolve([]);
   }
 
-  private getSlots(): [] {
-    return [];
+  // takes a time in seconds to get the distance value representing it
+  private calculateEstimatedDistance(timeInSeconds: number, shares: number, threshold: number, TARGET: number): number {
+    if (threshold === 0 || shares - threshold < 0) {
+      throw new Error("Invalid threshold");
+    }
+    const probabilities = []
+    const p = threshold / shares // Probability of finding a winning share in a slot
+    for (let i = 0; i <= threshold; i++) {
+      probabilities[i] =
+        this.binomialCoefficient(shares, i) *
+        Math.pow(p, i) *
+        Math.pow(1 - p, shares - i)
+    }
+    let estimatedTime = 0
+    for (let i = 1; i <= threshold; i++) {
+      estimatedTime += i * probabilities[i]
+    }
+
+    // getting distance based on timeInSeconds
+    return Math.abs(timeInSeconds / (estimatedTime * TARGET));
+  }
+  // Helper function to calculate binomial coefficient
+  private binomialCoefficient(n, k): number {
+    if (k === 0 || k === n) {
+      return 1
+    }
+    let result = 1
+    for (let i = 1; i <= k; i++) {
+      result *= (n - i + 1) / i
+    }
+    return result
   }
 }
