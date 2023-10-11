@@ -15,6 +15,7 @@ export class AuctionService implements IAuctionService {
   private mockAuctions: Auction[];
   private api: any;
   private contract: any;
+  private lastestSlot: any;
   private readonly MAX_CALL_WEIGHT2 = new BN(1_000_000_000_000).isub(BN_ONE);
   private readonly MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE);
   private readonly PROOFSIZE = new BN(1_000_000_000);
@@ -52,6 +53,10 @@ export class AuctionService implements IAuctionService {
       this.api = api;
       //Loading proxy contract
       this.contract = new ContractPromise(this.api.api, contractMetadata, process.env.NEXT_PUBLIC_CONTRACT_ADDRESS);
+      this.api.eventEmitter.on('blockHeader', () => {
+        // update the state of the latest slot
+        this.lastestSlot = this.api.latestSlot?.slot?.replace(/,/g, "");
+      });
     }
     if (signer) {
       this.api.api.setSigner(signer);
@@ -60,11 +65,7 @@ export class AuctionService implements IAuctionService {
   }
 
   async cancelAuction(signer: any, auctionId: string): Promise<Auction> {
-    let auction = this.mockAuctions.find(auction => auction.id === auctionId && auction.owner === signer);
-    if (auction) {
-      auction.status = AuctionStatus.Canceled;
-    }
-    return Promise.resolve(auction);
+    throw new Error("Method not implemented.");
   }
 
   async newAuction(signer: any, title: string, assetId: number, deadline: number, deposit: number): Promise<boolean> {
@@ -76,7 +77,7 @@ export class AuctionService implements IAuctionService {
     const slotScheduler = new etfjs.DistanceBasedSlotScheduler();
     let slotSchedule = slotScheduler.generateSchedule({
       slotAmount: this.SHARES,
-      currentSlot: parseInt(api.latestSlot.slot.replaceAll(",", "")),
+      currentSlot: parseInt(this.lastestSlot),
       distance
     });
     console.log("slotSchedule:", slotSchedule);
@@ -209,15 +210,14 @@ export class AuctionService implements IAuctionService {
         storageDepositLimit,
       }
     );
-    console.log(output?.toHuman()?.Ok.Ok);
     let auctions = (output?.toHuman()?.Ok?.Ok || []).map((value) => {
       return new Auction(
         value.auctionId,
         value.name,
         value.assetId,
         value.deposit,
-        value.published, //published date is not currently part of auction's storage
-        parseInt(value.deadline),
+        parseInt(value.published?.replace(/,/g, "") || 0),
+        this.calculateEstimatedTime(parseInt(value.deadline?.replace(/,/g, "") || 0), this.SHARES, this.THRESHOLD, this.TIME),
         value.owner,
         parseInt(value.status),
       )
@@ -240,14 +240,13 @@ export class AuctionService implements IAuctionService {
       },
       owner.address
     );
-    console.log(output?.toHuman()?.Ok.Ok);
     let auctions = (output?.toHuman()?.Ok?.Ok || []).map((value) => {
       return new Auction(
         value.auctionId,
         value.name,
         value.assetId,
         value.deposit,
-        value.published, //published date is not currently part of auction's storage
+        parseInt(value.published?.replace(/,/g, "") || 0),
         parseInt(value.deadline),
         value.owner,
         parseInt(value.status),
@@ -282,6 +281,31 @@ export class AuctionService implements IAuctionService {
     // getting distance based on timeInSeconds
     return Math.abs(timeInSeconds / (estimatedTime * TARGET));
   }
+
+  private calculateEstimatedTime(distance: number, shares: number, threshold: number, TARGET: number): number {
+    if (threshold === 0 || shares - threshold < 0) {
+      throw new Error("Invalid threshold");
+    }
+
+    const probabilities = []
+    const p = threshold / shares // Probability of finding a winning share in a slot
+
+    for (let i = 0; i <= threshold; i++) {
+      probabilities[i] =
+        this.binomialCoefficient(shares, i) *
+        Math.pow(p, i) *
+        Math.pow(1 - p, shares - i)
+    }
+
+    let estimatedTime = 0
+
+    for (let i = 1; i <= threshold; i++) {
+      estimatedTime += i * probabilities[i]
+    }
+
+    return estimatedTime * distance * TARGET * 1000;
+  }
+
   // Helper function to calculate binomial coefficient
   private binomialCoefficient(n, k): number {
     if (k === 0 || k === n) {
