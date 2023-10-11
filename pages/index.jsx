@@ -5,6 +5,7 @@ import BidderView from "../components/bidder/bidderView";
 import Header from "../components/header";
 import AuctioneerView from "../components/auctioneer/auctioneerView";
 import { AuctionService } from "../services/AuctionService";
+import Modal from "../components/modal"
 
 export default function Home() {
 
@@ -79,6 +80,7 @@ export default function Home() {
       </Head>
       <>
         <Header onChangeOption={onChangeOption} onConnect={connect} connectedAddress={signerAddress} isConnected={isConnected} />
+        <Modal title="Select a wallet" visible={false} />
         <main className="pt-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             {/* We've used 3xl here, but feel free to try other max-widths based on your needs */}
