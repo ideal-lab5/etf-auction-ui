@@ -15,7 +15,7 @@ export default function Modal(props) {
       onClick={handleBackdropClick}
     >
       <div className="cursor-default bg-white rounded-lg border-2 px-4 py-6" onClick={handleModalClick}>
-        <h2 class="text-2xl font-bold leading-tight tracking-tight text-gray-900 pb-3 px-4">
+        <h2 className="text-2xl font-bold leading-tight tracking-tight text-gray-900 pb-3 px-4 text-center">
           {title}
         </h2>
         {children}
