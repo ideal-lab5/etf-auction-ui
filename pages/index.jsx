@@ -11,6 +11,7 @@ export default function Home() {
   //get the service instance
   const auctionServiceInstance = container.resolve(AuctionService);
   const [isConnected, setIsConnected] = useState(false);
+  const [error, setError] = useState(null);
   const [signer, setSigner] = useState(null);
   const [signerAddress, setSignerAddress] = useState("");
   const [isSupportedNetwork, setIsSupportedNetwork] = useState(true);
@@ -41,7 +42,15 @@ export default function Home() {
       const ext = await import("@polkadot/extension-dapp");
       const _ = await ext.web3Enable('etf-auction')
       const allAccounts = await ext.web3Accounts()
-      const defaultAddress = allAccounts[0].address;
+
+      if (allAccounts.length === 0) {
+        setError('No available accounts.')
+        return
+      }
+
+      // TODO: Wallet selection
+      const defaultAddress = allAccounts[0]?.address;
+
       // finds an injector for an address
       const injector = await ext.web3FromAddress(defaultAddress);
       setSigner({ signer: injector.signer, address: defaultAddress })
