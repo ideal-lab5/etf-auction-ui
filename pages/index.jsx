@@ -12,6 +12,7 @@ export default function Home() {
   //get the service instance
   const auctionServiceInstance = container.resolve(AuctionService);
   const [isConnected, setIsConnected] = useState(false);
+  const [showWalletSelection, setShowWalletSelection] = useState()
   const [error, setError] = useState(null);
   const [signer, setSigner] = useState(null);
   const [signerAddress, setSignerAddress] = useState("");
@@ -79,8 +80,17 @@ export default function Home() {
         <link rel="icon" href="/favicon-32x32.png" />
       </Head>
       <>
-        <Header onChangeOption={onChangeOption} onConnect={connect} connectedAddress={signerAddress} isConnected={isConnected} />
-        <Modal title="Select a wallet" visible={false} />
+        <Header
+          onChangeOption={onChangeOption}
+          onConnect={() => setShowWalletSelection(true)}
+          connectedAddress={signerAddress}
+          isConnected={isConnected}
+        />
+        <Modal
+          title="Select a wallet"
+          visible={showWalletSelection}
+          onClose={() => setShowWalletSelection(false)}
+        />
         <main className="pt-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             {/* We've used 3xl here, but feel free to try other max-widths based on your needs */}
