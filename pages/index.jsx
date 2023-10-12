@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { container } from "tsyringe";
 import BidderView from "../components/bidder/bidderView";
 import Header from "../components/header";
@@ -13,7 +13,6 @@ export default function Home() {
   const auctionServiceInstance = container.resolve(AuctionService);
   const [isConnected, setIsConnected] = useState(false);
   const [showWalletSelection, setShowWalletSelection] = useState()
-  const [error, setError] = useState(null);
   const [signer, setSigner] = useState(null);
   const [signerAddress, setSignerAddress] = useState("");
   const [isSupportedNetwork, setIsSupportedNetwork] = useState(true);
@@ -115,8 +114,8 @@ export default function Home() {
                     >
                       Connect
                     </button>
-                  </td>   
-                </tr>                    
+                  </td>
+                </tr>
               ))}
             </tbody>
           </table>

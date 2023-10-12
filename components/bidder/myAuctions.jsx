@@ -184,7 +184,7 @@ export default function MyAuctions({ signer, auctionServiceInstance }) {
                                         'relative py-3.5 pl-3 pr-4 sm:pr-6 text-center text-sm font-medium'
                                     )}
                                 >
-                                    {auction.status === 1 && auction.deadline < new Date() ? <button
+                                    {auction.status === 0 && auction.deadline < new Date() ? <button
                                         type="button"
                                         onClick={() => onCancelBid(auction)}
                                         className="inline-flex items-center rounded-md border border-gray-300 bg-indigo-600 px-3 py-2 text-sm font-medium leading-4 text-white shadow-sm hover:bg-indigo-700 focus:outline-none disabled:cursor-not-allowed disabled:opacity-30"
@@ -192,7 +192,7 @@ export default function MyAuctions({ signer, auctionServiceInstance }) {
                                         title={signer ? '' : 'Connect your wallet to bid'}
                                     >
                                         {processing ? "Canceling..." : "Cancel Bid"} <span className="sr-only"></span>
-                                    </button> : auction.status === 1 && <button
+                                    </button> : auction.status === 0 && <button
                                         type="button"
                                         onClick={() => onComplete(auction)}
                                         className="inline-flex items-center rounded-md border border-gray-300 bg-indigo-600 px-3 py-2 text-sm font-medium leading-4 text-white shadow-sm hover:bg-indigo-700 focus:outline-none disabled:cursor-not-allowed disabled:opacity-30"
@@ -201,9 +201,9 @@ export default function MyAuctions({ signer, auctionServiceInstance }) {
                                     >
                                         {processing ? "Completing..." : "Complete"} <span className="sr-only"></span>
                                     </button>}
-                                    {auction.status === 2 && <span className="inline-flex items-center rounded-md border border-gray-300 bg-gray-600 px-3 py-2 text-sm font-medium leading-4 text-white shadow-sm">
+                                    {auction.status === 1 && <span className="inline-flex items-center rounded-md border border-gray-300 bg-gray-600 px-3 py-2 text-sm font-medium leading-4 text-white shadow-sm">
                                         Completed</span>}
-                                    {auction.status === 3 && <span className="inline-flex items-center rounded-md border border-gray-300 bg-gray-600 px-3 py-2 text-sm font-medium leading-4 text-white shadow-sm">
+                                    {auction.status === 2 && <span className="inline-flex items-center rounded-md border border-gray-300 bg-gray-600 px-3 py-2 text-sm font-medium leading-4 text-white shadow-sm">
                                         Canceled</span>}
                                     {auctionIndex !== 0 ? <div className="absolute right-6 left-0 -top-px h-px bg-gray-200" /> : null}
                                 </td>
