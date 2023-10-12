@@ -5,15 +5,19 @@ import BidderView from "../components/bidder/bidderView";
 import Header from "../components/header";
 import AuctioneerView from "../components/auctioneer/auctioneerView";
 import { AuctionService } from "../services/AuctionService";
+import Modal from "../components/modal"
 
 export default function Home() {
 
   //get the service instance
   const auctionServiceInstance = container.resolve(AuctionService);
   const [isConnected, setIsConnected] = useState(false);
+  const [showWalletSelection, setShowWalletSelection] = useState()
+  const [error, setError] = useState(null);
   const [signer, setSigner] = useState(null);
   const [signerAddress, setSignerAddress] = useState("");
   const [isSupportedNetwork, setIsSupportedNetwork] = useState(true);
+  const [availableAccounts, setAvailableAccounts] = useState([]);
   const [selectedOption, setSelectedOption] = useState({
     view: "apply",
     option: "search"
@@ -39,27 +43,34 @@ export default function Home() {
     if (typeof window !== "undefined") {
       // Client-side-only code
       const ext = await import("@polkadot/extension-dapp");
-      const _ = await ext.web3Enable('etf-auction')
-      const allAccounts = await ext.web3Accounts()
-      const defaultAddress = allAccounts[0].address;
-      // finds an injector for an address
-      const injector = await ext.web3FromAddress(defaultAddress);
-      setSigner({ signer: injector.signer, address: defaultAddress })
-      setSignerAddress(defaultAddress)
-      setIsConnected(true)
+      const _ = await ext.web3Enable('etf-auction');
+      const allAccounts = await ext.web3Accounts();
+      setAvailableAccounts(allAccounts);
     }
   }
 
-  useEffect(() => {
-    connect();
-    return () => {
-      //TODO implement disconnection logic
-    };
-
-  }, []);
-
   const onChangeOption = (view, option) => {
     setSelectedOption({ view, option });
+  }
+
+  // Handler for the click event of the `Connect` button on the NavBar.
+  const handleConnect = async () => {
+    await connect();
+    setShowWalletSelection(true);
+  }
+
+  const handleSelectWallet = (address) => async () => {
+    // TODO: We could probably do this import only once.
+    const ext = await import("@polkadot/extension-dapp");
+
+    // finds an injector for an address
+    const injector = await ext.web3FromAddress(address);
+
+    // TODO: Set connected wallet info in localStorage for lazy loading.
+    setSigner({ signer: injector.signer, address });
+    setSignerAddress(address);
+    setIsConnected(true);
+    setShowWalletSelection(false);
   }
 
   return (
@@ -69,7 +80,47 @@ export default function Home() {
         <link rel="icon" href="/favicon-32x32.png" />
       </Head>
       <>
-        <Header onChangeOption={onChangeOption} onConnect={connect} connectedAddress={signerAddress} isConnected={isConnected} />
+        <Header
+          onChangeOption={onChangeOption}
+          onConnect={handleConnect}
+          connectedAddress={signerAddress}
+          isConnected={isConnected}
+        />
+        <Modal
+          title="Select a wallet"
+          visible={showWalletSelection}
+          onClose={() => setShowWalletSelection(false)}
+        >
+          <table className="-mx-4 mt-6 ring-1 ring-gray-300 sm:-mx-6 md:mx-0 md:rounded-lg min-w-full divide-y divide-gray-300">
+            <thead>
+              <tr>
+                <th scope="col" className="py-3.5 px-3 text-left text-sm font-semibold text-gray-900">Name</th>
+                <th scope="col" className="py-3.5 px-3 text-left text-sm font-semibold text-gray-900 lg:table-cell">Address</th>
+                <th scope="col" className="py-3.5 px-3 pr-6" />
+              </tr>
+            </thead>
+            <tbody>
+              {availableAccounts.map((account, index) => (
+                <tr key={index}>
+                  <td className="py-3.5 px-3 text-left text-sm text-gray-800">
+                    {account.meta.name}
+                  </td>
+                  <td className="py-3.5 px-3 text-left text-sm text-gray-800 lg:table-cell">
+                    {account.address}
+                  </td>
+                  <td className="py-3.5 pl-3 pr-6">
+                    <button
+                      className="inline-flex items-center justify-center whitespace-nowrap rounded-md border border-transparent bg-pink-600 px-4 py-1 text-base font-medium text-white shadow-sm hover:bg-indigo-700"
+                      onClick={handleSelectWallet(account.address)}
+                    >
+                      Connect
+                    </button>
+                  </td>   
+                </tr>                    
+              ))}
+            </tbody>
+          </table>
+        </Modal>
         <main className="pt-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             {/* We've used 3xl here, but feel free to try other max-widths based on your needs */}
