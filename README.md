@@ -34,3 +34,15 @@ To build the docker image, from the root, execute:
 ``` bash
 docker-compose build
 ```
+
+## As a static site
+
+This project can also be run as a static site, which can then be hosted in IPFS, for example.
+
+In order to use as a static site, generate the `out` directory by running:
+
+``` bash
+npm run export
+```
+
+The static site is generated in the generated directory. Not that this will run a custom scripte, `replacer.js`, which handles replacing file paths in the generated build. See this [open issue](https://github.com/vercel/next.js/issues/8158) on the next.js github for more insights into this.
