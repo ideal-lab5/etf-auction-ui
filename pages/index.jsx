@@ -6,6 +6,7 @@ import Header from "../components/header";
 import AuctioneerView from "../components/auctioneer/auctioneerView";
 import { AuctionService } from "../services/AuctionService";
 import Modal from "../components/modal"
+import { XCircleIcon } from "@heroicons/react/20/solid";
 
 export default function Home() {
 
@@ -98,35 +99,45 @@ export default function Home() {
           visible={showWalletSelection}
           onClose={() => setShowWalletSelection(false)}
         >
-          <table className="-mx-4 mt-6 ring-1 ring-gray-300 sm:-mx-6 md:mx-0 md:rounded-lg min-w-full divide-y divide-gray-300">
-            <thead>
-              <tr>
-                <th scope="col" className="py-3.5 px-3 text-left text-sm font-semibold text-gray-900">Name</th>
-                <th scope="col" className="py-3.5 px-3 text-left text-sm font-semibold text-gray-900 lg:table-cell">Address</th>
-                <th scope="col" className="py-3.5 px-3 pr-6" />
-              </tr>
-            </thead>
-            <tbody>
-              {availableAccounts.map((account, index) => (
-                <tr key={index}>
-                  <td className="py-3.5 px-3 text-left text-sm text-gray-800">
-                    {account.meta.name}
-                  </td>
-                  <td className="py-3.5 px-3 text-left text-sm text-gray-800 lg:table-cell">
-                    {account.address}
-                  </td>
-                  <td className="py-3.5 pl-3 pr-6">
-                    <button
-                      className="inline-flex items-center justify-center whitespace-nowrap rounded-md border border-transparent bg-pink-600 px-4 py-1 text-base font-medium text-white shadow-sm hover:bg-indigo-700"
-                      onClick={handleSelectWallet(account.address)}
-                    >
-                      Connect
-                    </button>
-                  </td>
+          {availableAccounts.length > 0 ?
+            <table className="-mx-4 mt-6 ring-1 ring-gray-300 sm:-mx-6 md:mx-0 md:rounded-lg min-w-full divide-y divide-gray-300">
+              <thead>
+                <tr>
+                  <th scope="col" className="py-3.5 px-3 text-left text-sm font-semibold text-gray-900">Name</th>
+                  <th scope="col" className="py-3.5 px-3 text-left text-sm font-semibold text-gray-900 lg:table-cell">Address</th>
+                  <th scope="col" className="py-3.5 px-3 pr-6" />
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {availableAccounts.map((account, index) => (
+                  <tr key={index}>
+                    <td className="py-3.5 px-3 text-left text-sm text-gray-800">
+                      {account.meta.name}
+                    </td>
+                    <td className="py-3.5 px-3 text-left text-sm text-gray-800 lg:table-cell">
+                      {account.address}
+                    </td>
+                    <td className="py-3.5 pl-3 pr-6">
+                      <button
+                        className="inline-flex items-center justify-center whitespace-nowrap rounded-md border border-transparent bg-pink-600 px-4 py-1 text-base font-medium text-white shadow-sm hover:bg-indigo-700"
+                        onClick={handleSelectWallet(account.address)}
+                      >
+                        Connect
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table> : <div className="rounded-md bg-red-50 p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <XCircleIcon className="h-4 w-4 text-red-400" aria-hidden="true" />
+                </div>
+                <div className="ml-1">
+                  <h3 className="text-xs font-medium text-red-800">You need polkadotjs and at least one wallet to use this app.</h3>
+                </div>
+              </div>
+            </div>}
         </Modal>
         <main className="pt-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
