@@ -18,8 +18,10 @@ export class Auction {
   minBidUnit: string;
   publishedAt: any;
   deadline: number;
+  deadlineSlot: number;
   owner: string;
   status: AuctionStatus;
+  winner: string;
 
   constructor(
     id: string,
@@ -28,6 +30,7 @@ export class Auction {
     deposit: number,
     publishedAt: any,
     deadline: number,
+    deadlineSlot: number,
     owner: string,
     status: AuctionStatus
   ) {
@@ -41,8 +44,10 @@ export class Auction {
     this.minBidUnit = "";
     this.publishedAt = publishedAt;
     this.deadline = deadline;
+    this.deadlineSlot = deadlineSlot;
     this.owner = owner;
     this.status = status;
+    this.winner = undefined;
   }
 
 }

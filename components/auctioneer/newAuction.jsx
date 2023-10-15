@@ -23,6 +23,11 @@ export default function NewAuction({ onCancel, onSave, signer, auctionServiceIns
                 event.target.deadline.value,
                 event.target.salary.value
             );
+
+            if (!result) {
+                throw new Error("Uknown error, please try again.");
+            }
+
             await onSave(result);
         } catch (error) {
             if (error.message.includes("1010:")) {

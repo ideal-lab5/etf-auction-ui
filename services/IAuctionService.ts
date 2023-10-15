@@ -6,8 +6,9 @@ export interface IAuctionService {
   newAuction: (signer: any, title: string, assetId: number, deadline: number, deposit: number) => Promise<boolean>;
   cancelAuction: (signer: any, auctionId: string) => Promise<boolean>;
   completeAuction: (signer: any, auctionId: string, deadline: number) => Promise<boolean>;
-  getEtfApi: () => Promise<any>;
   bid: (signer: any, auctionId: string, deadline: number, amount: number) => Promise<boolean>;
-  getWinner: (signer: any, auctionId: string) => Promise<any>;
   claim: (signer: any, auctionId: string) => Promise<boolean>;
+  getEtfApi: () => Promise<any>;
+  getWinner: (signer: any, auctionId: string) => Promise<any>;
+  getBalance: () => Promise<any>;
 }

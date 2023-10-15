@@ -14,7 +14,7 @@ export default function BidderView({ signer, auctionServiceInstance, searchOptio
                 <h1 className="text-3xl font-bold leading-tight tracking-tight text-gray-900 pb-3 pl-3"> {searchOptionSelected ? "Search" : "My Bids"}</h1>
             </div>
             <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-                <a className="whitespace-nowrap text-sm text-indigo-600 hover:text-indigo-700 pr-4" href="#" onClick={toggleOption}> {searchOptionSelected ? "My Bids" : "Search"}</a>
+                {signer && <a className="whitespace-nowrap text-sm text-indigo-600 hover:text-indigo-700 pr-4" href="#" onClick={toggleOption}> {searchOptionSelected ? "My Bids" : "Search"}</a>}
             </div>
         </div>
         <div className="rounded-lg border-2 border-gray-200" >

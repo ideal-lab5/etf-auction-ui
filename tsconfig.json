@@ -24,8 +24,9 @@
   "include": [
     "next-env.d.ts",
     "**/*.ts",
-    "**/*.tsx"
-, "pages/api/jobs/newJobPost.js", "pages/api/jobs/newJobPost.js"  ],
+    "**/*.tsx",
+    "pages/api/auctions/auction.js"
+  ],
   "exclude": [
     "node_modules"
   ]

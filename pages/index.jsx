@@ -15,6 +15,7 @@ export default function Home() {
   const [showWalletSelection, setShowWalletSelection] = useState()
   const [signer, setSigner] = useState(null);
   const [signerAddress, setSignerAddress] = useState("");
+  const [balance, setBalance] = useState(0);
   const [isSupportedNetwork, setIsSupportedNetwork] = useState(true);
   const [availableAccounts, setAvailableAccounts] = useState([]);
   const [selectedOption, setSelectedOption] = useState({
@@ -70,7 +71,14 @@ export default function Home() {
     setSignerAddress(address);
     setIsConnected(true);
     setShowWalletSelection(false);
+    checkBalance();
   }
+
+  const checkBalance = async () => {
+    setBalance(await auctionServiceInstance.getBalance() || 0);
+  }
+
+  setInterval(checkBalance, 60000);
 
   return (
     <>
@@ -134,7 +142,7 @@ export default function Home() {
                 <div className="flex space-x-6 md:order-2">
                   <div className="text-sm text-gray-500">
                     <p className="text-base leading-6 text-indigo-400">
-                      XXX Balance: <span className="text-base leading-6 text-gray-500">{`$0`}</span>
+                      Auction Contract (Balance): <span className="text-base leading-6 text-gray-500">{balance}</span>
                     </p>
                   </div>
                 </div>
@@ -144,10 +152,7 @@ export default function Home() {
               </div>
             </footer>
           </div>
-
         </main>
-
-
       </>
     </>
   );

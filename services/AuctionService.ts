@@ -1,4 +1,4 @@
-import { Auction } from "../domain/Auction";
+import { Auction, AuctionStatus } from "../domain/Auction";
 import { IAuctionService } from "./IAuctionService";
 import { singleton } from "tsyringe";
 import { ContractPromise } from '@polkadot/api-contract';
@@ -111,8 +111,10 @@ export class AuctionService implements IAuctionService {
       });
     };
 
-    await sendContractTx(this.contract, this);
-    return Promise.resolve(true);
+    return await sendContractTx(this.contract, this).then(() => Promise.resolve(true)).catch(() => {
+      console.log("Error sending transaction");
+      return Promise.resolve(false);
+    });
   }
 
   async bid(signer: any, auctionId: string, deadline: number, amount: number): Promise<boolean> {
@@ -161,8 +163,10 @@ export class AuctionService implements IAuctionService {
       });
     };
 
-    await sendContractTx(this.contract, this);
-    return Promise.resolve(true);
+    return await sendContractTx(this.contract, this).then(() => Promise.resolve(true)).catch(() => {
+      console.log("Error sending transaction");
+      return Promise.resolve(false);
+    });
   }
 
   async completeAuction(signer: any, auctionId: string, deadline: number): Promise<boolean> {
@@ -197,8 +201,10 @@ export class AuctionService implements IAuctionService {
       });
     };
 
-    await sendContractTx(this.contract);
-    return Promise.resolve(true);
+    return await sendContractTx(this.contract).then(() => Promise.resolve(true)).catch(() => {
+      console.log("Error sending transaction");
+      return Promise.resolve(false);
+    });
 
   }
 
@@ -259,7 +265,13 @@ export class AuctionService implements IAuctionService {
         },
         auctionId,
       );
-    return api.api.createType('AuctionResult', result).toHuman();
+    return Promise.resolve(api.api.createType('AuctionResult', result)?.toHuman() || undefined);
+  }
+
+  async getBalance(): Promise<any> {
+    let api = await this.getEtfApi();
+    const { data: balance } = await api.api.query.system.account(process.env.NEXT_PUBLIC_CONTRACT_ADDRESS);
+    return Promise.resolve(balance.free.toHuman() || undefined);
   }
 
   async claim(signer: any, auctionId: string): Promise<boolean> {
@@ -297,8 +309,10 @@ export class AuctionService implements IAuctionService {
         }
       });
     };
-    await sendContractTx(this.contract);
-    return Promise.resolve(true);
+    return await sendContractTx(this.contract).then(() => Promise.resolve(true)).catch(() => {
+      console.log("Error sending transaction");
+      return Promise.resolve(false);
+    });
   }
 
   async getPublishedAuctions(signer: any): Promise<Auction[]> {
@@ -314,14 +328,16 @@ export class AuctionService implements IAuctionService {
         storageDepositLimit,
       }
     );
-    let auctions = (output?.toHuman()?.Ok?.Ok || []).map((value) => {
+    let auctions = (output?.toHuman()?.Ok?.Ok || []).map((value: any) => {
+      let deadlineSlot = parseInt(value.deadline?.replace(/,/g, "") || 0);
       return new Auction(
         value.auctionId,
         value.name,
         value.assetId,
         value.deposit,
         parseInt(value.published?.replace(/,/g, "") || 0),
-        this.estimateTime(parseInt(api.getLatestSlot()), parseInt(value.deadline?.replace(/,/g, "") || 0)),
+        this.estimateTime(parseInt(api.getLatestSlot()), deadlineSlot),
+        deadlineSlot,
         value.owner,
         parseInt(value.status),
       )
@@ -344,17 +360,22 @@ export class AuctionService implements IAuctionService {
       },
       owner.address
     );
-    let auctions = (output?.toHuman()?.Ok?.Ok || []).map((value) => {
-      return new Auction(
+    let auctions = (output?.toHuman()?.Ok?.Ok || []).map(async (value: any) => {
+      let deadlineSlot = parseInt(value.deadline?.replace(/,/g, "") || 0);
+      let auction = new Auction(
         value.auctionId,
         value.name,
         value.assetId,
         value.deposit,
         parseInt(value.published?.replace(/,/g, "") || 0),
-        this.estimateTime(parseInt(api.getLatestSlot()), parseInt(value.deadline?.replace(/,/g, "") || 0)),
+        this.estimateTime(parseInt(api.getLatestSlot()), deadlineSlot),
+        deadlineSlot,
         value.owner,
         parseInt(value.status),
-      )
+      );
+      //this is not the most efficient way to do this, but it works for now to ilustrate de use case.
+      auction.winner = auction.status === AuctionStatus.Completed && await this.getWinner(owner, auction.id);
+      return auction
     });
     return Promise.resolve(auctions);
   }
@@ -373,14 +394,16 @@ export class AuctionService implements IAuctionService {
       },
       bidder.address
     );
-    let auctions = (output?.toHuman()?.Ok?.Ok || []).map((value) => {
+    let auctions = (output?.toHuman()?.Ok?.Ok || []).map((value: any) => {
+      let deadlineSlot = parseInt(value.deadline?.replace(/,/g, "") || 0);
       return new Auction(
         value.auctionId,
         value.name,
         value.assetId,
         value.deposit,
         parseInt(value.published?.replace(/,/g, "") || 0),
-        this.estimateTime(parseInt(api.getLatestSlot()), parseInt(value.deadline?.replace(/,/g, "") || 0)),
+        this.estimateTime(parseInt(api.getLatestSlot()), deadlineSlot),
+        deadlineSlot,
         value.owner,
         parseInt(value.status),
       )

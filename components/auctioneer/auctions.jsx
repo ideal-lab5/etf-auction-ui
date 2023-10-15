@@ -10,9 +10,9 @@ function classNames(...classes) {
 export default function Auctions({ signer, auctionServiceInstance }) {
 
     const [newAuction, setNewAuction] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [auctions, setAuctions] = useState([]);
     const [currentTab, setCurrentTab] = useState(0);
-    const [processing, setProcessing] = useState(false);
 
     const onSave = async (auction) => {
         console.log('New auction saved!', auction);
@@ -20,30 +20,8 @@ export default function Auctions({ signer, auctionServiceInstance }) {
         setNewAuction(false);
     }
 
-    const onComplete = async (auction) => {
-        try {
-            setProcessing(true);
-            await auctionServiceInstance.completeAuction(signer, auction.id);
-            queryAuctions();
-        } catch (e) {
-            console.error(e);
-        }
-        setProcessing(false);
-    }
-
-    const onCancel = async (auction) => {
-        try {
-            setProcessing(true);
-            await auctionServiceInstance.cancelAuction(signer, auction.id);
-            queryAuctions();
-            setCurrentTab(1);
-        } catch (e) {
-            console.error(e);
-        }
-        setProcessing(false);
-    }
-
     const queryAuctions = async () => {
+        setLoading(true);
         try {
             console.log('Loading auctions...');
             let auctions = await auctionServiceInstance.getMyAuctions(signer);
@@ -51,13 +29,11 @@ export default function Auctions({ signer, auctionServiceInstance }) {
         } catch (e) {
             console.error(e);
         }
-
+        setLoading(false);
     }
 
     useEffect(() => {
-
         queryAuctions();
-
     }, []);
 
     return (
@@ -135,7 +111,18 @@ export default function Auctions({ signer, auctionServiceInstance }) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {auctions.filter((element) => {
+                                {loading &&
+                                    <div role="status" class="max-w-sm animate-pulse p-4">
+                                        <div class="h-2.5 bg-gray-200 rounded-full dark:bg-gray-700 w-48 mb-4"></div>
+                                        <div class="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[360px] mb-2.5"></div>
+                                        <div class="h-2 bg-gray-200 rounded-full dark:bg-gray-700 mb-2.5"></div>
+                                        <div class="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[330px] mb-2.5"></div>
+                                        <div class="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[300px] mb-2.5"></div>
+                                        <div class="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[360px]"></div>
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                }
+                                {!loading && auctions.filter((element) => {
                                     if (currentTab === 0) return element.status === 0;
                                     if (currentTab === 1) return element.status === 1 || element.status === 2;
                                 }).map((auction, auctionIndex) => (
@@ -190,32 +177,17 @@ export default function Auctions({ signer, auctionServiceInstance }) {
                                                 'hidden px-3 py-3.5 text-sm text-center text-gray-500 lg:table-cell'
                                             )}
                                         >
-                                            <Moment date={auction.deadline} fromNow={true} />
+                                            <Moment date={new Date(auction.deadline)} fromNow={true} />
                                         </td>
 
                                         <td
                                             className={classNames(
                                                 auctionIndex === 0 ? '' : 'border-t border-transparent',
-                                                'relative py-3.5 pl-3 pr-4 sm:pr-6 text-center text-sm font-medium'
+                                                'relative py-3.5 pl-3 pr-4 sm:pr-6 text-left text-sm font-medium'
                                             )}
                                         >
-                                            {auction.status === 0 && auction.deadline < new Date() ? <button
-                                                type="button"
-                                                onClick={() => onCancel(auction)}
-                                                className="inline-flex items-center rounded-md border border-gray-300 bg-indigo-600 px-3 py-2 text-sm font-medium leading-4 text-white shadow-sm hover:bg-indigo-700 focus:outline-none disabled:cursor-not-allowed disabled:opacity-30"
-                                                disabled={!signer || processing}
-                                                title={signer ? '' : 'Connect your wallet to cancel your auction'}
-                                            >
-                                                {processing ? "Canceling..." : "Cancel"} <span className="sr-only"></span>
-                                            </button> : auction.status === 0 && <button
-                                                type="button"
-                                                onClick={() => onComplete(auction)}
-                                                className="inline-flex items-center rounded-md border border-gray-300 bg-indigo-600 px-3 py-2 text-sm font-medium leading-4 text-white shadow-sm hover:bg-indigo-700 focus:outline-none disabled:cursor-not-allowed disabled:opacity-30"
-                                                disabled={!signer || processing}
-                                                title={signer ? '' : 'Connect your wallet to bid'}
-                                            >
-                                                {processing ? "Completing..." : "Complete"} <span className="sr-only"></span>
-                                            </button>}
+                                            {auction.status === 0 && <span className="inline-flex items-center rounded-md border border-gray-300 bg-gray-600 px-3 py-2 text-sm font-medium leading-4 text-white shadow-sm">
+                                                Published</span>}
                                             {auction.status === 1 && <span className="inline-flex items-center rounded-md border border-gray-300 bg-gray-600 px-3 py-2 text-sm font-medium leading-4 text-white shadow-sm">
                                                 Completed</span>}
                                             {auction.status === 2 && <span className="inline-flex items-center rounded-md border border-gray-300 bg-gray-600 px-3 py-2 text-sm font-medium leading-4 text-white shadow-sm">
