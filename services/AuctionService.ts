@@ -17,8 +17,6 @@ export class AuctionService implements IAuctionService {
   private readonly MAX_CALL_WEIGHT2 = new BN(1_000_000_000_000).isub(BN_ONE);
   private readonly MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE);
   private readonly PROOFSIZE = new BN(1_000_000_000);
-  private readonly SHARES = 1;
-  private readonly THRESHOLD = 1;
   private readonly TIME = 10; //seconds
   // custom types for the auction structs
   private readonly CUSTOM_TYPES = {
@@ -411,7 +409,9 @@ export class AuctionService implements IAuctionService {
     // convert to time (s)
     let secondsRemaining = slotsRemaining * this.TIME
     // get deadline as a number of seconds from now
-    return new Date(1970, 0, 1).setSeconds(Date.now()/1000 + secondsRemaining)
+    let t = new Date(1970, 0, 1)
+    t.setSeconds(Date.now()/1000 + secondsRemaining)
+    return t
   }
 
 }
