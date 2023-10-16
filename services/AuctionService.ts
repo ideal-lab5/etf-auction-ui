@@ -68,8 +68,7 @@ export class AuctionService implements IAuctionService {
 
   async newAuction(signer: any, title: string, assetId: number, deadline: number, deposit: number): Promise<boolean> {
     let api = await this.getEtfApi(signer.signer);
-    let dateInSeconds = new Date(new Date().getDate() + deadline).getTime() / 1000;
-    let distance = this.calculateEstimatedDistance(dateInSeconds, this.SHARES, this.THRESHOLD, this.TIME);
+    let distance = (new Date().getDate() + deadline) * 24 * 3600 / this.TIME
     console.log("distance:", distance);
     const etfjs = await import('@ideallabs/etf.js');
     const slotScheduler = new etfjs.DistanceBasedSlotScheduler();
@@ -336,7 +335,7 @@ export class AuctionService implements IAuctionService {
         value.assetId,
         value.deposit,
         parseInt(value.published?.replace(/,/g, "") || 0),
-        this.estimateTime(parseInt(api.getLatestSlot()), deadlineSlot),
+        this.estimateTime(Date.now(), parseInt(api.getLatestSlot()), deadlineSlot),
         deadlineSlot,
         value.owner,
         parseInt(value.status),
@@ -368,7 +367,7 @@ export class AuctionService implements IAuctionService {
         value.assetId,
         value.deposit,
         parseInt(value.published?.replace(/,/g, "") || 0),
-        this.estimateTime(parseInt(api.getLatestSlot()), deadlineSlot),
+        this.estimateTime(Date.now(), parseInt(api.getLatestSlot()), deadlineSlot),
         deadlineSlot,
         value.owner,
         parseInt(value.status),
@@ -402,7 +401,7 @@ export class AuctionService implements IAuctionService {
         value.assetId,
         value.deposit,
         parseInt(value.published?.replace(/,/g, "") || 0),
-        this.estimateTime(parseInt(api.getLatestSlot()), deadlineSlot),
+        this.estimateTime(Date.now(), parseInt(api.getLatestSlot()), deadlineSlot),
         deadlineSlot,
         value.owner,
         parseInt(value.status),
@@ -411,55 +410,9 @@ export class AuctionService implements IAuctionService {
     return Promise.resolve(auctions);
   }
 
-  // takes a time in seconds to get the distance value representing it
-  private calculateEstimatedDistance(timeInSeconds: number, shares: number, threshold: number, TARGET: number): number {
-    if (threshold === 0 || shares - threshold < 0) {
-      throw new Error("Invalid threshold");
-    }
-    const probabilities = []
-    const p = threshold / shares // Probability of finding a winning share in a slot
-    for (let i = 0; i <= threshold; i++) {
-      probabilities[i] =
-        this.binomialCoefficient(shares, i) *
-        Math.pow(p, i) *
-        Math.pow(1 - p, shares - i)
-    }
-    let estimatedTime = 0
-    for (let i = 1; i <= threshold; i++) {
-      estimatedTime += i * probabilities[i]
-    }
-
-    // getting distance based on timeInSeconds
-    return Math.abs(timeInSeconds / (estimatedTime * TARGET));
-  }
-
-  // Helper function to calculate binomial coefficient
-  private binomialCoefficient(n: number, k: number): number {
-    if (k === 0 || k === n) {
-      return 1
-    }
-    let result = 1
-    for (let i = 1; i <= k; i++) {
-      result *= (n - i + 1) / i
-    }
-    return result
-  }
-
-  private estimateTime(currentSlot: number, deadline: number): number {
-    const r = 2; // Variance in seconds
-    const slotsRemaining = (deadline - currentSlot) / 10; // 10 seconds per slot
-    const expectedSlotsRemaining = slotsRemaining;
-    // Initialize the total time elapsed
-    let total_elapsed_time = 0;
-    // Simulate expectedSlotsRemaining ticks
-    for (let i = 0; i < expectedSlotsRemaining; i++) {
-      // Generate a random value with mean 10 seconds (1 slot) and variance r
-      const slot_duration = 10 + (Math.random() * 2 * r - r);
-      // Update the total elapsed time
-      total_elapsed_time += slot_duration;
-    }
-    // Calculate the estimated time after the expectedSlotsRemaining slots
-    return currentSlot + total_elapsed_time * 10000; // 10,000 milliseconds per slot
+  private estimateTime(currentTimeMillis: number, currentSlot: number, deadline: number): number {
+    const timeRemainingMillis = (deadline - currentSlot) * 1000
+    return currentTimeMillis + timeRemainingMillis
   }
 
 }
