@@ -203,7 +203,7 @@ export default function Auctions({ signer, auctionServiceInstance }) {
                                         'relative py-3.5 pl-3 pr-4 sm:pr-6 text-left text-sm font-medium'
                                     )}
                                 >
-                                    {auction.status === 0 && auction.deadline < new Date().getTime() ?
+                                    {auction.status === 0 && auction.deadline > new Date() ?
                                         <div className="sm:flex sm:items-center">
                                             <div>
                                                 <input
