@@ -66,18 +66,12 @@ export class AuctionService implements IAuctionService {
     throw new Error("Method not implemented.");
   }
 
-  async newAuction(signer: any, title: string, assetId: number, deadline: number, deposit: number): Promise<boolean> {
-    let api = await this.getEtfApi(signer.signer);
-    let distance = (new Date().getDate() + deadline) * 24 * 3600 / this.TIME
-    console.log("distance:", distance);
-    const etfjs = await import('@ideallabs/etf.js');
-    const slotScheduler = new etfjs.DistanceBasedSlotScheduler();
-    let slotSchedule = slotScheduler.generateSchedule({
-      slotAmount: this.SHARES,
-      currentSlot: parseInt(this.lastestSlot),
-      distance
-    });
-    console.log("slotSchedule:", slotSchedule);
+  async newAuction(signer: any, title: string, assetId: number, duration: number, deposit: number): Promise<boolean> {
+    let api = await this.getEtfApi(signer.signer)
+    // deadline ~ number of days => convert to number of slots
+    let distance = duration * 24 * 3600 / (this.TIME)
+    // since we only need one value, we don't really need a slot scheduler
+    let target = parseInt(this.lastestSlot) + distance
     async function sendContractTx(contract: any, auctionService: AuctionService): Promise<SubmittableResult> {
       return new Promise(async (resolve, reject) => {
         try {
@@ -91,7 +85,7 @@ export class AuctionService implements IAuctionService {
             },
               title,
               assetId,
-              slotSchedule[0],
+              target,
               deposit,
             ).signAndSend(signer.address, (result: SubmittableResult) => {
               // Log the transaction status
@@ -335,7 +329,7 @@ export class AuctionService implements IAuctionService {
         value.assetId,
         value.deposit,
         parseInt(value.published?.replace(/,/g, "") || 0),
-        this.estimateTime(Date.now(), parseInt(api.getLatestSlot()), deadlineSlot),
+        this.estimateTime(parseInt(api.getLatestSlot()), deadlineSlot),
         deadlineSlot,
         value.owner,
         parseInt(value.status),
@@ -367,7 +361,7 @@ export class AuctionService implements IAuctionService {
         value.assetId,
         value.deposit,
         parseInt(value.published?.replace(/,/g, "") || 0),
-        this.estimateTime(Date.now(), parseInt(api.getLatestSlot()), deadlineSlot),
+        this.estimateTime(parseInt(api.getLatestSlot()), deadlineSlot),
         deadlineSlot,
         value.owner,
         parseInt(value.status),
@@ -401,7 +395,7 @@ export class AuctionService implements IAuctionService {
         value.assetId,
         value.deposit,
         parseInt(value.published?.replace(/,/g, "") || 0),
-        this.estimateTime(Date.now(), parseInt(api.getLatestSlot()), deadlineSlot),
+        this.estimateTime(parseInt(api.getLatestSlot()), deadlineSlot),
         deadlineSlot,
         value.owner,
         parseInt(value.status),
@@ -410,9 +404,14 @@ export class AuctionService implements IAuctionService {
     return Promise.resolve(auctions);
   }
 
-  private estimateTime(currentTimeMillis: number, currentSlot: number, deadline: number): number {
-    const timeRemainingMillis = (deadline - currentSlot) * 1000
-    return currentTimeMillis + timeRemainingMillis
+  // precision at seconds instead of ms since our target TIME is measured in seconds
+  private estimateTime(currentSlot: number, deadline: number): Date {
+    // get number of slots left
+    const slotsRemaining = deadline - currentSlot
+    // convert to time (s)
+    let secondsRemaining = slotsRemaining * this.TIME
+    // get deadline as a number of seconds from now
+    return new Date(1970, 0, 1).setSeconds(Date.now()/1000 + secondsRemaining)
   }
 
 }

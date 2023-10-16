@@ -194,7 +194,7 @@ export default function Auctions({ signer, auctionServiceInstance }) {
                                         'hidden px-3 py-3.5 text-sm text-center text-gray-500 lg:table-cell'
                                     )}
                                 >
-                                    <Moment date={new Date(auction.deadline)} fromNow={true} />
+                                    <Moment date={auction.deadline} fromNow={true} />
                                 </td>
 
                                 <td
