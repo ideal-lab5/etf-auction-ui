@@ -347,7 +347,7 @@ export class AuctionService implements IAuctionService {
   }
 
   async getMyAuctions(owner: any): Promise<Auction[]> {
-    let api = await this.getEtfApi();
+    let api = await this.getEtfApi(owner);
     const storageDepositLimit = null
     const { output } = await this.contract.query.getAuctionsByOwner(
       owner.address,
@@ -360,7 +360,7 @@ export class AuctionService implements IAuctionService {
       },
       owner.address
     );
-    let auctions = (output?.toHuman()?.Ok?.Ok || []).map(async (value: any) => {
+    let auctions = (output?.toHuman()?.Ok?.Ok || []).map((value: any) => {
       let deadlineSlot = parseInt(value.deadline?.replace(/,/g, "") || 0);
       let auction = new Auction(
         value.auctionId,
@@ -374,7 +374,7 @@ export class AuctionService implements IAuctionService {
         parseInt(value.status),
       );
       //this is not the most efficient way to do this, but it works for now to ilustrate de use case.
-      auction.winner = auction.status === AuctionStatus.Completed && await this.getWinner(owner, auction.id);
+      //auction.winner = auction.status === AuctionStatus.Completed && await this.getWinner(owner, auction.id);
       return auction
     });
     return Promise.resolve(auctions);
