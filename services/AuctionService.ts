@@ -70,7 +70,6 @@ export class AuctionService implements IAuctionService {
     let distance = duration * 60 / (this.TIME)
     // since we only need one value, we don't really need a slot scheduler
     let target = parseInt(this.lastestSlot) + distance
-    console.log(target)
     async function sendContractTx(contract: any, auctionService: AuctionService): Promise<SubmittableResult> {
       return new Promise(async (resolve, reject) => {
         try {
