@@ -137,7 +137,7 @@ export default function Home() {
                 <div className="flex space-x-6 md:order-2">
                   <div className="text-sm text-gray-500">
                     <p className="text-base leading-6 text-indigo-400">
-                      Auction Contract (Balance): <span className="text-base leading-6 text-gray-500">{balance}</span>
+                      Auction Contract (Balance): <span className="text-base leading-6 text-gray-500">{balance}<small> ETF </small></span>
                     </p>
                   </div>
                 </div>

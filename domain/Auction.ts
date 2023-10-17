@@ -32,13 +32,14 @@ export class Auction {
     deadline: Date,
     deadlineSlot: number,
     owner: string,
-    status: AuctionStatus
+    status: AuctionStatus,
+    bids: number,
   ) {
     this.id = id;
     this.title = title;
     this.assetId = assetId;
     this.deposit = deposit;
-    this.bids = 0;
+    this.bids = bids;
     this.units = 0;
     this.minBid = 0;
     this.minBidUnit = "";

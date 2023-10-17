@@ -330,6 +330,7 @@ export class AuctionService implements IAuctionService {
         deadlineSlot,
         value.owner,
         parseInt(value.status),
+        parseInt(value.bids)
       )
     });
 
@@ -362,6 +363,7 @@ export class AuctionService implements IAuctionService {
         deadlineSlot,
         value.owner,
         parseInt(value.status),
+        parseInt(value.bids)
       );
       //this is not the most efficient way to do this, but it works for now to ilustrate de use case.
       //auction.winner = auction.status === AuctionStatus.Completed && await this.getWinner(owner, auction.id);
@@ -396,6 +398,7 @@ export class AuctionService implements IAuctionService {
         deadlineSlot,
         value.owner,
         parseInt(value.status),
+        parseInt(value.bids)
       )
     });
     return Promise.resolve(auctions);
