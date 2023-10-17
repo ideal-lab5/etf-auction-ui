@@ -60,7 +60,9 @@ export default function Home() {
   }
 
   const checkBalance = async () => {
-    setBalance(await auctionServiceInstance.getBalance() || 0);
+    let b = await auctionServiceInstance.getBalance()
+    let bigBalance = BigInt(parseInt(b))
+    setBalance(Number(bigBalance) || 0);
   }
 
   setInterval(checkBalance, 60000);
