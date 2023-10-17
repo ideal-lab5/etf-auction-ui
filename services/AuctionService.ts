@@ -222,7 +222,6 @@ export class AuctionService implements IAuctionService {
       for (const c of cts) {
         let bidder = c[0];
         let proposal = api.createType('Proposal', c[1]);
-        console.log(proposal);
         let plaintext = await api.decrypt(
           proposal.ciphertext,
           proposal.nonce,
