@@ -323,7 +323,7 @@ export class AuctionService implements IAuctionService {
       return new Auction(
         value.auctionId,
         value.name,
-        value.assetId,
+        parseInt(value.assetId?.replace(/,/g, "") || 0),
         value.deposit,
         parseInt(value.published?.replace(/,/g, "") || 0),
         this.estimateTime(parseInt(api.getLatestSlot()), deadlineSlot),
@@ -355,7 +355,7 @@ export class AuctionService implements IAuctionService {
       let auction = new Auction(
         value.auctionId,
         value.name,
-        value.assetId,
+        parseInt(value.assetId?.replace(/,/g, "") || 0),
         value.deposit,
         parseInt(value.published?.replace(/,/g, "") || 0),
         this.estimateTime(parseInt(api.getLatestSlot()), deadlineSlot),
@@ -389,7 +389,7 @@ export class AuctionService implements IAuctionService {
       return new Auction(
         value.auctionId,
         value.name,
-        value.assetId,
+        parseInt(value.assetId?.replace(/,/g, "") || 0),
         value.deposit,
         parseInt(value.published?.replace(/,/g, "") || 0),
         this.estimateTime(parseInt(api.getLatestSlot()), deadlineSlot),

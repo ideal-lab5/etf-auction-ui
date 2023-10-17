@@ -33,7 +33,7 @@ export default function MyAuctions({ signer, auctionServiceInstance }) {
             console.log('Completing...');
             setProcessing(true);
             let success = await auctionServiceInstance.completeAuction(signer, auction.id, auction.deadlineSlot);
-            setErrors({ ...errors, [auction.id]: success });
+            setErrors({ ...errors, [auction.id]: !success });
             queryAuctions();
         } catch (e) {
             console.error(e);
@@ -47,7 +47,7 @@ export default function MyAuctions({ signer, auctionServiceInstance }) {
             console.log('Claiming...');
             setProcessing(true);
             let success = await auctionServiceInstance.claim(signer, auction.id);
-            setErrors({ ...errors, [auction.id]: success });
+            setErrors({ ...errors, [auction.id]: !success });
             queryAuctions();
         } catch (e) {
             console.error(e);
@@ -103,7 +103,7 @@ export default function MyAuctions({ signer, auctionServiceInstance }) {
                                 scope="col"
                                 className="hidden px-3 py-3.5 text-right text-sm font-semibold text-gray-900 lg:table-cell"
                             >
-                                Units
+                                Nft Id
                             </th>
                             <th scope="col" className="px-3 py-3.5 text-right text-sm font-semibold text-gray-900">
                                 Min Bid
@@ -127,14 +127,14 @@ export default function MyAuctions({ signer, auctionServiceInstance }) {
                     </thead>
                     <tbody>
                         {loading &&
-                            <div role="status" class="max-w-sm animate-pulse p-4">
-                                <div class="h-2.5 bg-gray-200 rounded-full dark:bg-gray-700 w-48 mb-4"></div>
-                                <div class="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[360px] mb-2.5"></div>
-                                <div class="h-2 bg-gray-200 rounded-full dark:bg-gray-700 mb-2.5"></div>
-                                <div class="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[330px] mb-2.5"></div>
-                                <div class="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[300px] mb-2.5"></div>
-                                <div class="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[360px]"></div>
-                                <span class="sr-only">Loading...</span>
+                            <div role="status" className="max-w-sm animate-pulse p-4">
+                                <div className="h-2.5 bg-gray-200 rounded-full dark:bg-gray-700 w-48 mb-4"></div>
+                                <div className="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[360px] mb-2.5"></div>
+                                <div className="h-2 bg-gray-200 rounded-full dark:bg-gray-700 mb-2.5"></div>
+                                <div className="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[330px] mb-2.5"></div>
+                                <div className="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[300px] mb-2.5"></div>
+                                <div className="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[360px]"></div>
+                                <span className="sr-only">Loading...</span>
                             </div>
                         }
                         {!loading && myAuctions.filter((element) => {
@@ -167,7 +167,7 @@ export default function MyAuctions({ signer, auctionServiceInstance }) {
                                         'hidden px-3 py-3.5 text-sm text-right text-gray-500 lg:table-cell'
                                     )}
                                 >
-                                    {auction.units}
+                                    {auction.assetId}
                                 </td>
                                 <td
                                     className={classNames(

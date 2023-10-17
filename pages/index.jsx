@@ -24,22 +24,6 @@ export default function Home() {
     option: "search"
   });
 
-  const onChainChanged = (chainId) => {
-    // Handle the new chain.
-    // Correctly handling chain changes can be complicated.
-    // We recommend reloading the page unless you have good reason not to.
-    setIsConnected(false);
-    window.location.reload();
-  }
-
-  const onaAccountsChanged = (chainId) => {
-    // Handle the new chain.
-    // Correctly handling chain changes can be complicated.
-    // We recommend reloading the page unless you have good reason not to.
-    setIsConnected(false);
-    window.location.reload();
-  }
-
   async function connect() {
     if (typeof window !== "undefined") {
       // Client-side-only code
@@ -61,18 +45,18 @@ export default function Home() {
   }
 
   const handleSelectWallet = (address) => async () => {
-    // TODO: We could probably do this import only once.
     const ext = await import("@polkadot/extension-dapp");
-
     // finds an injector for an address
     const injector = await ext.web3FromAddress(address);
-
-    // TODO: Set connected wallet info in localStorage for lazy loading.
     setSigner({ signer: injector.signer, address });
     setSignerAddress(address);
     setIsConnected(true);
     setShowWalletSelection(false);
     checkBalance();
+    setSelectedOption({
+      view: "apply",
+      option: "search"
+    });
   }
 
   const checkBalance = async () => {
