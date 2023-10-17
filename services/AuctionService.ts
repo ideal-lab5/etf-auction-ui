@@ -11,7 +11,7 @@ import { SubmittableResult } from "@polkadot/api";
 
 @singleton()
 export class AuctionService implements IAuctionService {
-  private api: any;
+  public api: any;
   private contract: any;
   private lastestSlot: any;
   private readonly MAX_CALL_WEIGHT2 = new BN(1_000_000_000_000).isub(BN_ONE);
@@ -66,10 +66,11 @@ export class AuctionService implements IAuctionService {
 
   async newAuction(signer: any, title: string, assetId: number, duration: number, deposit: number): Promise<boolean> {
     let api = await this.getEtfApi(signer.signer)
-    // deadline ~ number of days => convert to number of slots
-    let distance = duration * 24 * 3600 / (this.TIME)
+    // deadline ~ number of minutes => convert to number of slots
+    let distance = duration * 60 / (this.TIME)
     // since we only need one value, we don't really need a slot scheduler
     let target = parseInt(this.lastestSlot) + distance
+    console.log(target)
     async function sendContractTx(contract: any, auctionService: AuctionService): Promise<SubmittableResult> {
       return new Promise(async (resolve, reject) => {
         try {
@@ -409,8 +410,8 @@ export class AuctionService implements IAuctionService {
     // convert to time (s)
     let secondsRemaining = slotsRemaining * this.TIME
     // get deadline as a number of seconds from now
-    let t = new Date(1970, 0, 1)
-    t.setSeconds(Date.now()/1000 + secondsRemaining)
+    let t = new Date()
+    t.setSeconds(t.getSeconds() + secondsRemaining)
     return t
   }
 

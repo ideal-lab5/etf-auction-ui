@@ -84,7 +84,7 @@ export default function NewAuction({ onCancel, onSave, signer, auctionServiceIns
 
                         <div className="sm:col-span-3">
                             <label htmlFor="last-name" className="block text-sm font-medium text-gray-700">
-                                Deadline (Number of days from now) *
+                                Deadline (Number of minutes from now) *
                             </label>
                             <div className="mt-1">
                                 <input
