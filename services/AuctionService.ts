@@ -11,14 +11,12 @@ import { SubmittableResult } from "@polkadot/api";
 
 @singleton()
 export class AuctionService implements IAuctionService {
-  private api: any;
+  public api: any;
   private contract: any;
   private lastestSlot: any;
   private readonly MAX_CALL_WEIGHT2 = new BN(1_000_000_000_000).isub(BN_ONE);
   private readonly MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE);
   private readonly PROOFSIZE = new BN(1_000_000_000);
-  private readonly SHARES = 1;
-  private readonly THRESHOLD = 1;
   private readonly TIME = 10; //seconds
   // custom types for the auction structs
   private readonly CUSTOM_TYPES = {
@@ -66,19 +64,12 @@ export class AuctionService implements IAuctionService {
     throw new Error("Method not implemented.");
   }
 
-  async newAuction(signer: any, title: string, assetId: number, deadline: number, deposit: number): Promise<boolean> {
-    let api = await this.getEtfApi(signer.signer);
-    let dateInSeconds = new Date(new Date().getDate() + deadline).getTime() / 1000;
-    let distance = this.calculateEstimatedDistance(dateInSeconds, this.SHARES, this.THRESHOLD, this.TIME);
-    console.log("distance:", distance);
-    const etfjs = await import('@ideallabs/etf.js');
-    const slotScheduler = new etfjs.DistanceBasedSlotScheduler();
-    let slotSchedule = slotScheduler.generateSchedule({
-      slotAmount: this.SHARES,
-      currentSlot: parseInt(this.lastestSlot),
-      distance
-    });
-    console.log("slotSchedule:", slotSchedule);
+  async newAuction(signer: any, title: string, assetId: number, duration: number, deposit: number): Promise<boolean> {
+    let api = await this.getEtfApi(signer.signer)
+    // deadline ~ number of minutes => convert to number of slots
+    let distance = duration * 60 / (this.TIME)
+    // since we only need one value, we don't really need a slot scheduler
+    let target = parseInt(this.lastestSlot) + distance
     async function sendContractTx(contract: any, auctionService: AuctionService): Promise<SubmittableResult> {
       return new Promise(async (resolve, reject) => {
         try {
@@ -92,7 +83,7 @@ export class AuctionService implements IAuctionService {
             },
               title,
               assetId,
-              slotSchedule[0],
+              target,
               deposit,
             ).signAndSend(signer.address, (result: SubmittableResult) => {
               // Log the transaction status
@@ -231,7 +222,6 @@ export class AuctionService implements IAuctionService {
       for (const c of cts) {
         let bidder = c[0];
         let proposal = api.createType('Proposal', c[1]);
-        console.log(proposal);
         let plaintext = await api.decrypt(
           proposal.ciphertext,
           proposal.nonce,
@@ -411,55 +401,16 @@ export class AuctionService implements IAuctionService {
     return Promise.resolve(auctions);
   }
 
-  // takes a time in seconds to get the distance value representing it
-  private calculateEstimatedDistance(timeInSeconds: number, shares: number, threshold: number, TARGET: number): number {
-    if (threshold === 0 || shares - threshold < 0) {
-      throw new Error("Invalid threshold");
-    }
-    const probabilities = []
-    const p = threshold / shares // Probability of finding a winning share in a slot
-    for (let i = 0; i <= threshold; i++) {
-      probabilities[i] =
-        this.binomialCoefficient(shares, i) *
-        Math.pow(p, i) *
-        Math.pow(1 - p, shares - i)
-    }
-    let estimatedTime = 0
-    for (let i = 1; i <= threshold; i++) {
-      estimatedTime += i * probabilities[i]
-    }
-
-    // getting distance based on timeInSeconds
-    return Math.abs(timeInSeconds / (estimatedTime * TARGET));
-  }
-
-  // Helper function to calculate binomial coefficient
-  private binomialCoefficient(n: number, k: number): number {
-    if (k === 0 || k === n) {
-      return 1
-    }
-    let result = 1
-    for (let i = 1; i <= k; i++) {
-      result *= (n - i + 1) / i
-    }
-    return result
-  }
-
-  private estimateTime(currentSlot: number, deadline: number): number {
-    const r = 2; // Variance in seconds
-    const slotsRemaining = (deadline - currentSlot) / 10; // 10 seconds per slot
-    const expectedSlotsRemaining = slotsRemaining;
-    // Initialize the total time elapsed
-    let total_elapsed_time = 0;
-    // Simulate expectedSlotsRemaining ticks
-    for (let i = 0; i < expectedSlotsRemaining; i++) {
-      // Generate a random value with mean 10 seconds (1 slot) and variance r
-      const slot_duration = 10 + (Math.random() * 2 * r - r);
-      // Update the total elapsed time
-      total_elapsed_time += slot_duration;
-    }
-    // Calculate the estimated time after the expectedSlotsRemaining slots
-    return currentSlot + total_elapsed_time * 10000; // 10,000 milliseconds per slot
+  // precision at seconds instead of ms since our target TIME is measured in seconds
+  private estimateTime(currentSlot: number, deadline: number): Date {
+    // get number of slots left
+    const slotsRemaining = deadline - currentSlot
+    // convert to time (s)
+    let secondsRemaining = slotsRemaining * this.TIME
+    // get deadline as a number of seconds from now
+    let t = new Date()
+    t.setSeconds(t.getSeconds() + secondsRemaining)
+    return t
   }
 
 }

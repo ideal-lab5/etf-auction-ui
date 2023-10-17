@@ -194,7 +194,7 @@ export default function Auctions({ signer, auctionServiceInstance }) {
                                         'hidden px-3 py-3.5 text-sm text-center text-gray-500 lg:table-cell'
                                     )}
                                 >
-                                    <Moment date={new Date(auction.deadline)} fromNow={true} />
+                                    <Moment date={auction.deadline} fromNow={true} />
                                 </td>
 
                                 <td
@@ -203,7 +203,7 @@ export default function Auctions({ signer, auctionServiceInstance }) {
                                         'relative py-3.5 pl-3 pr-4 sm:pr-6 text-left text-sm font-medium'
                                     )}
                                 >
-                                    {auction.status === 0 && auction.deadline < new Date().getTime() ?
+                                    {auction.status === 0 && auction.deadlineSlot > auctionServiceInstance.api?.getLatestSlot() ?
                                         <div className="sm:flex sm:items-center">
                                             <div>
                                                 <input
