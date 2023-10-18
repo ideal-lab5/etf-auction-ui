@@ -1,33 +1,53 @@
-# ETF Sealed Auction dapp
+# Timelock Auction Dapp
 
-## .env
+This is an interface which interacts with the [timelock auction contracts](https://github.com/ideal-lab5/contracts/tree/main/timelock_auction). It uses polkadotjs and etf.js to encrypt bids for the future, ensuring that bids can only be revealed after the auction has passed its deadline.
+
+![](./assets/web3%20foundation_grants_badge_black.png)
+
+## Usage
+
+The auction dapp is hosted on our testnet, accessible at https://auction.idealabs.network. It allows participants to participate in auctions of ERC721 tokens. 
+
+
+### Prerequisites
+
+- install the [polkadotjs extension](https://polkadot.js.org/extension/) and create an address
+- Send us a message on [element](https://matrix.to/#/!WNjsSVgwXxgopDOSPj:matrix.org?via=matrix.org) to request access and tokens.
+ 
+
+<div style="display: grid;">
+    <img style="max-height: 400px; margin: 0 auto;" src="./assets/connect_and_create.gif" />
+</div>
+
+## Setup
+
+### Configure .env
+
+Create a local `.env.local` and fill in the details below. The contract must be deployed on the network that the node is connected to.
+
+``` shell
+NEXT_PUBLIC_CONTRACT_ADDRESS="the address of the proxy contract"
+NEXT_PUBLIC_NODE_DETAIL="fully qualified url of the node"
 ```
-NEXT_PUBLIC_CONTRACT_ADDRESS: the address of the proxy contract
-NEXT_PUBLIC_NODE_DETAILS: fully qualified url of the node
-```
-## Start with
+### Run from sources
+
 ```bash
-npm install
-```
-## How to run
-```bash
-npm run dev
+
+npm i && run dev
 ```
 
-## Docker
+### Docker
 
-The dapp can be run from the docker build as well. 
+#### Run
 
-### Run
+The project can be run from the docker image by running:
 
 ``` bash
-# fetch the docker image
 docker pull ideallabs/etf-auction-ui
-# run
 docker run -p 3000:3000 --rm ideallabs/etf-auction-ui
 ```
 
-### Build
+#### Build
 
 To build the docker image, from the root, execute:
 
@@ -35,7 +55,7 @@ To build the docker image, from the root, execute:
 docker-compose build
 ```
 
-## As a static site
+### As a static site
 
 This project can also be run as a static site, which can then be hosted in IPFS, for example.
 
@@ -45,4 +65,4 @@ In order to use as a static site, generate the `out` directory by running:
 npm run export
 ```
 
-The static site is generated in the generated directory. Not that this will run a custom scripte, `replacer.js`, which handles replacing file paths in the generated build. See this [open issue](https://github.com/vercel/next.js/issues/8158) on the next.js github for more insights into this.
+The static site is generated in the generated directory. Not that this will run a custom script, `replacer.js`, which handles replacing file paths in the generated build. See this [open issue](https://github.com/vercel/next.js/issues/8158) on the next.js github for more insights into why this is done.
