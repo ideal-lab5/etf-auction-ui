@@ -2,7 +2,10 @@
 
 This is an interface which interacts with the [timelock auction contracts](https://github.com/ideal-lab5/contracts/tree/main/timelock_auction). It uses polkadotjs and etf.js to encrypt bids for the future, ensuring that bids can only be revealed after the auction has passed its deadline.
 
-![](./assets/web3%20foundation_grants_badge_black.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./assets/web3%20foundation_grants_badge_black.png">
+  <img alt="Text changing depending on mode. Light: 'light' Dark: 'dark'" src="./assets/web3%20foundation_grants_badge_white.png">
+</picture>
 
 ## Usage
 
