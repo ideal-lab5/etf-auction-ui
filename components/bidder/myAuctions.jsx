@@ -210,7 +210,7 @@ export default function MyAuctions({ signer, auctionServiceInstance }) {
                                     <span
                                         onClick={() => navigator.clipboard.writeText(auction.winner)}
                                     >
-                                        {auction.winner.substring(0, 4) + '...' + auction.winner.substring(auction.winner.length - 4)}
+                                        {auction.winner ? auction.winner.substring(0, 4) + '...' + auction.winner.substring(auction.winner.length - 4) : ''}
                                     </span>
                                 </td>
 
