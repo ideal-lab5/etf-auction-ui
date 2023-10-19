@@ -204,13 +204,20 @@ export default function MyAuctions({ signer, auctionServiceInstance }) {
                                 <td
                                     className={classNames(
                                         auctionIndex === 0 ? '' : 'border-t border-transparent',
-                                        'relative py-3.5 pl-3 pr-4 sm:pr-6 text-left text-sm font-medium cursor-copy'
+                                        auction.winner ? 'cursor-copy' : '',
+                                        'relative py-3.5 pl-3 pr-4 sm:pr-6 text-left text-sm font-medium'
                                     )}
                                 >
                                     <span
-                                        onClick={() => navigator.clipboard.writeText(auction.winner)}
+                                        onClick={
+                                            () => navigator.clipboard.writeText(
+                                                auction.winner ? auction.winner : ''
+                                            )}
                                     >
-                                        {auction.winner ? auction.winner.substring(0, 4) + '...' + auction.winner.substring(auction.winner.length - 4) : ''}
+                                        { auction.winner ? 
+                                            auction.winner.substring(0, 4) + 
+                                                '...' + auction.winner.substring(auction.winner.length - 4) : ''
+                                        }
                                     </span>
                                 </td>
 
@@ -220,7 +227,7 @@ export default function MyAuctions({ signer, auctionServiceInstance }) {
                                         'relative py-3.5 pl-3 pr-4 sm:pr-6 text-left text-sm font-medium'
                                     )}
                                 >
-                                    {auction.status === 0 && auction.deadlineSlot > auctionServiceInstance.api.getLatestSlot() && <button
+                                    {auction.status === 0 && auction.deadlineSlot < auctionServiceInstance.api.getLatestSlot() && <button
                                         type="button"
                                         onClick={() => onComplete(auction)}
                                         className="inline-flex items-center rounded-md border border-gray-300 bg-indigo-600 px-3 py-2 text-sm font-medium leading-4 text-white shadow-sm hover:bg-indigo-700 focus:outline-none disabled:cursor-not-allowed disabled:opacity-30"
@@ -233,7 +240,7 @@ export default function MyAuctions({ signer, auctionServiceInstance }) {
                                         type="button"
                                         onClick={() => onClaim(auction)}
                                         className="inline-flex items-center rounded-md border border-gray-300 bg-indigo-600 px-3 py-2 text-sm font-medium leading-4 text-white shadow-sm hover:bg-indigo-700 focus:outline-none disabled:cursor-not-allowed disabled:opacity-30"
-                                        disabled={!signer || processing }
+                                        disabled={!signer || processing}
                                         title={signer ? '' : 'Connect your wallet to bid'}
                                     >
                                         {processing ? "Claiming..." : "Claim"} <span className="sr-only"></span>

@@ -122,6 +122,14 @@ export default function Auctions({ signer, auctionServiceInstance }) {
                             >
                                 Deadline
                             </th>
+                            {currentTab === 1 ? 
+                            <th
+                                scope="col"
+                                className="hidden px-3 py-3.5 text-center text-sm font-semibold text-gray-900 lg:table-cell"
+                            >
+                                Winner
+                            </th>
+                            : <th></th> }
                             <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
                                 <span className="sr-only">Actions</span>
                             </th>
@@ -200,6 +208,19 @@ export default function Auctions({ signer, auctionServiceInstance }) {
                                 <td
                                     className={classNames(
                                         auctionIndex === 0 ? '' : 'border-t border-transparent',
+                                        'relative py-3.5 pl-3 pr-4 sm:pr-6 text-left text-sm font-medium cursor-copy'
+                                    )}
+                                >
+                                    <span
+                                        onClick={() => navigator.clipboard.writeText(auction.winner)}
+                                    >
+                                        { auction.winner ? auction.winner.substring(0, 4) + '...' + auction.winner.substring(auction.winner.length - 4) : '' }
+                                    </span>
+                                </td>
+
+                                <td
+                                    className={classNames(
+                                        auctionIndex === 0 ? '' : 'border-t border-transparent',
                                         'relative py-3.5 pl-3 pr-4 sm:pr-6 text-left text-sm font-medium'
                                     )}
                                 >
@@ -251,7 +272,7 @@ export default function Auctions({ signer, auctionServiceInstance }) {
                                             </div>
                                         </div>
                                     </div>}
-                                    {auction.winner && <div className="rounded-md bg-green-50 p-4">
+                                    {/* {auction.winner && <div className="rounded-md bg-green-50 p-4">
                                         <div className="flex">
                                             <div className="flex-shrink-0">
                                                 <CheckCircleIcon className="h-4 w-4 text-green-400" aria-hidden="true" />
@@ -260,7 +281,7 @@ export default function Auctions({ signer, auctionServiceInstance }) {
                                                 <h3 className="text-xs font-medium text-grenn-800">Winner: {hasWinner}</h3>
                                             </div>
                                         </div>
-                                    </div>}
+                                    </div>} */}
                                 </td>
                             </tr>
                         })}
