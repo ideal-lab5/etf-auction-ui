@@ -243,7 +243,7 @@ export class AuctionService implements IAuctionService {
   async getWinner(signer: any, auctionId: string): Promise<any> {
     let api = await this.getEtfApi(signer.signer);
     const storageDepositLimit = null;
-    const { result } =
+    const { result, output } =
       await this.contract.query.getWinner(
         signer.address,
         {
@@ -255,7 +255,7 @@ export class AuctionService implements IAuctionService {
         },
         auctionId,
       );
-    return Promise.resolve(api.api.createType('AuctionResult', result)?.toHuman() || undefined);
+    return Promise.resolve(output.toHuman().Ok.Ok);
   }
 
   async getBalance(): Promise<any> {
