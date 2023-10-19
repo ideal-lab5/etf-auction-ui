@@ -1,22 +1,44 @@
+import { XCircleIcon } from "@heroicons/react/20/solid";
 import { useState } from "react";
 
 export default function NewAuction({ onCancel, onSave, signer, auctionServiceInstance }) {
 
     const [processing, setProcessing] = useState(false);
+    const [confirmNewAuctionError, setConfirmNewAuctionError] = useState(false);
+    const [friendlyErrorMessage, setFriendlyErrorMessage] = useState("");
 
+    const cancelNewAuction = () => {
+        setConfirmNewAuctionError(false);
+        onCancel();
+    }
     const confirmNewAuction = async (event) => {
         event.preventDefault();
-
-        let result = await auctionServiceInstance.newAuction(
-            signer,
-            event.target.title.value,
-            event.target.assetId.value,
-            event.target.deadline.value,
-            event.target.salary.value
-        );
-
+        setConfirmNewAuctionError(false);
         setProcessing(true);
-        await onSave(result);
+        try {
+            let result = await auctionServiceInstance.newAuction(
+                signer,
+                event.target.title.value,
+                event.target.assetId.value,
+                event.target.deadline.value,
+                event.target.salary.value
+            );
+
+            if (!result) {
+                throw new Error("Uknown error, please try again.");
+            }
+
+            await onSave(result);
+        } catch (error) {
+            if (error.message.includes("1010:")) {
+                setFriendlyErrorMessage("You don't have enough balance to create this auction.");
+                setConfirmNewAuctionError(error);
+            }
+            else if (!error.message.includes("Cancelled")) {
+                setFriendlyErrorMessage("Uknown error, please try again.");
+                setConfirmNewAuctionError(error);
+            }
+        }
         setProcessing(false);
     }
 
@@ -62,14 +84,14 @@ export default function NewAuction({ onCancel, onSave, signer, auctionServiceIns
 
                         <div className="sm:col-span-3">
                             <label htmlFor="last-name" className="block text-sm font-medium text-gray-700">
-                                Deadline *
+                                Deadline (Number of minutes from now) *
                             </label>
                             <div className="mt-1">
                                 <input
                                     type="number"
                                     required
                                     name="deadline"
-                                    placeholder="Ex 123"
+                                    placeholder="Ex. 10"
                                     id="deadline"
                                     className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                 />
@@ -97,11 +119,11 @@ export default function NewAuction({ onCancel, onSave, signer, auctionServiceIns
             </div>
 
             <div className="pt-5">
-                <div className="flex justify-end">
+                <div className="flex justify-end pb-5">
                     <button
                         type="button"
                         disabled={processing}
-                        onClick={e => onCancel()}
+                        onClick={e => cancelNewAuction()}
                         className="rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                     >
                         Cancel
@@ -114,6 +136,21 @@ export default function NewAuction({ onCancel, onSave, signer, auctionServiceIns
                         {processing ? <span> Saving... </span> : <span> Save </span>}
                     </button>
                 </div>
+                {confirmNewAuctionError && <div className="rounded-md bg-red-50 p-4">
+                    <div className="flex">
+                        <div className="flex-shrink-0">
+                            <XCircleIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
+                        </div>
+                        <div className="ml-3">
+                            <h3 className="text-sm font-medium text-red-800">Opps...there is a problem with your transaction</h3>
+                            <div className="mt-2 text-sm text-red-700">
+                                <ul role="list" className="list-disc space-y-1 pl-5">
+                                    <li>{friendlyErrorMessage}</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>}
             </div>
         </form>
     )

@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0x9546f803c62093ef463d8e43d7ff7cf8476d92f4b89db938f3dd307254dd2937",
+    "hash": "0xfed13c3bb41ecc5eb0ba0b5ca58f4537bec3deba8215e0439234c130055ad824",
     "language": "ink! 4.3.0",
     "compiler": "rustc 1.74.0-nightly",
     "build_info": {
@@ -56,7 +56,7 @@
         "docs": [
           "Constructor"
         ],
-        "label": "default",
+        "label": "new",
         "payable": false,
         "returnType": {
           "displayName": [
@@ -65,7 +65,7 @@
           ],
           "type": 12
         },
-        "selector": "0xed4b9d1b"
+        "selector": "0x9bae9d5e"
       }
     ],
     "docs": [],
@@ -92,7 +92,7 @@
         "displayName": [
           "ChainExtension"
         ],
-        "type": 25
+        "type": 34
       },
       "hash": {
         "displayName": [
@@ -303,6 +303,61 @@
         "selector": "0xb388803f"
       },
       {
+        "args": [
+          {
+            "label": "auction_id",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 0
+            }
+          }
+        ],
+        "default": false,
+        "docs": [],
+        "label": "get_encrypted_bids",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 22
+        },
+        "selector": "0x365fdf2e"
+      },
+      {
+        "args": [
+          {
+            "label": "auction_id",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 0
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " get the winner and payment owed",
+          " by the winner of an auction"
+        ],
+        "label": "get_winner",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 27
+        },
+        "selector": "0x821b7a35"
+      },
+      {
         "args": [],
         "default": false,
         "docs": [
@@ -316,7 +371,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 22
+          "type": 30
         },
         "selector": "0xa67bd204"
       },
@@ -347,7 +402,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 23
+          "type": 32
         },
         "selector": "0x8cbd78f9"
       },
@@ -373,7 +428,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 23
+          "type": 32
         },
         "selector": "0xc9b0485e"
       },
@@ -404,7 +459,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 22
+          "type": 30
         },
         "selector": "0xf2b549cb"
       },
@@ -422,7 +477,7 @@
         ],
         "default": false,
         "docs": [
-          " Fetch all auctions in which the bidder has placed a bid ",
+          " Fetch all auctions in which the bidder has placed a bid",
           "",
           " * `bidder`: The bidder account id",
           ""
@@ -435,7 +490,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 22
+          "type": 30
         },
         "selector": "0x6bf45a9a"
       }
@@ -585,7 +640,17 @@
                 "typeName": "u64"
               },
               {
+                "name": "published",
+                "type": 8,
+                "typeName": "Timestamp"
+              },
+              {
                 "name": "status",
+                "type": 2,
+                "typeName": "u8"
+              },
+              {
+                "name": "bids",
                 "type": 2,
                 "typeName": "u8"
               }
@@ -854,38 +919,50 @@
               },
               {
                 "index": 1,
-                "name": "NotAuctionOwner"
+                "name": "NftTransferFailed"
               },
               {
                 "index": 2,
-                "name": "AssetTransferFailed"
+                "name": "BalanceTransferFailed"
               },
               {
                 "index": 3,
-                "name": "AuctionAlreadyComplete"
+                "name": "NotAuctionOwner"
               },
               {
                 "index": 4,
-                "name": "AuctionInProgress"
+                "name": "AssetTransferFailed"
               },
               {
                 "index": 5,
-                "name": "DepositTooLow"
+                "name": "AuctionAlreadyComplete"
               },
               {
                 "index": 6,
-                "name": "InvalidCurrencyAmountTransferred"
+                "name": "AuctionInProgress"
               },
               {
                 "index": 7,
-                "name": "AuctionUnverified"
+                "name": "DepositTooLow"
               },
               {
                 "index": 8,
-                "name": "AuctionDoesNotExist"
+                "name": "InvalidCurrencyAmountTransferred"
               },
               {
                 "index": 9,
+                "name": "AuctionUnverified"
+              },
+              {
+                "index": 10,
+                "name": "AuctionDoesNotExist"
+              },
+              {
+                "index": 11,
+                "name": "NoWinnerDetermined"
+              },
+              {
+                "index": 12,
                 "name": "Other"
               }
             ]
@@ -996,11 +1073,31 @@
       "id": 21,
       "type": {
         "def": {
-          "tuple": [
-            0,
-            7
-          ]
-        }
+          "composite": {
+            "fields": [
+              {
+                "name": "bidder",
+                "type": 0,
+                "typeName": "AccountId"
+              },
+              {
+                "name": "bid",
+                "type": 7,
+                "typeName": "u128"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "AccountId",
+            "type": 0
+          }
+        ],
+        "path": [
+          "vickrey_auction",
+          "RevealedBid"
+        ]
       }
     },
     {
@@ -1012,7 +1109,7 @@
               {
                 "fields": [
                   {
-                    "type": 5
+                    "type": 23
                   }
                 ],
                 "index": 0,
@@ -1033,7 +1130,7 @@
         "params": [
           {
             "name": "T",
-            "type": 5
+            "type": 23
           },
           {
             "name": "E",
@@ -1063,7 +1160,7 @@
               {
                 "fields": [
                   {
-                    "type": 14
+                    "type": 17
                   }
                 ],
                 "index": 1,
@@ -1079,7 +1176,7 @@
           },
           {
             "name": "E",
-            "type": 14
+            "type": 17
           }
         ],
         "path": [
@@ -1089,6 +1186,307 @@
     },
     {
       "id": 24,
+      "type": {
+        "def": {
+          "sequence": {
+            "type": 25
+          }
+        }
+      }
+    },
+    {
+      "id": 25,
+      "type": {
+        "def": {
+          "tuple": [
+            0,
+            26
+          ]
+        }
+      }
+    },
+    {
+      "id": 26,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "name": "ciphertext",
+                "type": 5,
+                "typeName": "Vec<u8>"
+              },
+              {
+                "name": "nonce",
+                "type": 5,
+                "typeName": "Vec<u8>"
+              },
+              {
+                "name": "capsule",
+                "type": 5,
+                "typeName": "Vec<u8>"
+              },
+              {
+                "name": "commitment",
+                "type": 5,
+                "typeName": "Vec<u8>"
+              }
+            ]
+          }
+        },
+        "path": [
+          "vickrey_auction",
+          "Proposal"
+        ]
+      }
+    },
+    {
+      "id": 27,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 28
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 14
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 28
+          },
+          {
+            "name": "E",
+            "type": 14
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 28,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 29
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 17
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 29
+          },
+          {
+            "name": "E",
+            "type": 17
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 29,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "name": "winner",
+                "type": 0,
+                "typeName": "AccountId"
+              },
+              {
+                "name": "debt",
+                "type": 7,
+                "typeName": "Balance"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "AccountId",
+            "type": 0
+          },
+          {
+            "name": "Balance",
+            "type": 7
+          }
+        ],
+        "path": [
+          "vickrey_auction",
+          "AuctionResult"
+        ]
+      }
+    },
+    {
+      "id": 30,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 31
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 14
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 31
+          },
+          {
+            "name": "E",
+            "type": 14
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 31,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 3
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 17
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 3
+          },
+          {
+            "name": "E",
+            "type": 17
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 32,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 33
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 14
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 33
+          },
+          {
+            "name": "E",
+            "type": 14
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 33,
       "type": {
         "def": {
           "variant": {
@@ -1130,14 +1528,14 @@
       }
     },
     {
-      "id": 25,
+      "id": 34,
       "type": {
         "def": {
           "variant": {}
         },
         "path": [
-          "tlock_proxy",
-          "etf_env",
+          "etf_chain_extension",
+          "ext",
           "ETF"
         ]
       }

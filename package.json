@@ -4,13 +4,20 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "export": "next build && next export && npm run replaceFilePaths",
+    "replaceFilePaths": "node replacer.js",
     "start": "next start",
     "test": "mocha"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.4",
     "@heroicons/react": "^2.0.13",
-    "@ideallabs/etf.js": "^0.0.7-dev",
+    "@ideallabs/etf.js": "^0.0.11-dev",
+    "@polkadot/api": "^10.9.1",
+    "@polkadot/api-contract": "^10.9.1",
+    "@polkadot/extension-dapp": "^0.46.5",
+    "@polkadot/util": "^12.5.1",
+    "@polkadot/util-crypto": "^12.5.1",
     "@tailwindcss/forms": "^0.5.3",
     "chai": "^4.3.6",
     "cors": "^2.8.5",
@@ -22,6 +29,8 @@
     "react-moment": "^1.1.2",
     "react-uuid": "^2.0.0",
     "reflect-metadata": "^0.1.13",
+    "replace-in-file": "^7.0.1",
+    "sha3": "^2.1.4",
     "tsyringe": "^4.7.0",
     "web3.storage": "^4.5.5"
   },
