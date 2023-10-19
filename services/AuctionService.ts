@@ -386,9 +386,11 @@ export class AuctionService implements IAuctionService {
       },
       bidder.address
     );
-    let auctions = (output?.toHuman()?.Ok?.Ok || []).map((value: any) => {
+    const auctionsData = output?.toHuman()?.Ok?.Ok || [];
+    const promises = auctionsData.map(async (value: any) => {
+      const winner = await this.getWinner(bidder, value.auctionId);
       let deadlineSlot = parseInt(value.deadline?.replace(/,/g, "") || 0);
-      return new Auction(
+      let auction = new Auction(
         value.auctionId,
         value.name,
         parseInt(value.assetId?.replace(/,/g, "") || 0),
@@ -399,8 +401,12 @@ export class AuctionService implements IAuctionService {
         value.owner,
         parseInt(value.status),
         parseInt(value.bids)
-      )
+      );
+      auction.winner = auction.status === AuctionStatus.Completed && winner.winner;
+      return auction;
     });
+
+    const auctions = await Promise.all(promises);
     return Promise.resolve(auctions);
   }
 
