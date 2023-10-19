@@ -120,6 +120,12 @@ export default function MyAuctions({ signer, auctionServiceInstance }) {
                             >
                                 Deadline
                             </th>
+                            <th
+                                scope="col"
+                                className="hidden px-3 py-3.5 text-center text-sm font-semibold text-gray-900 lg:table-cell"
+                            >
+                                Winner
+                            </th>
                             <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
                                 <span className="sr-only">Actions</span>
                             </th>
@@ -193,6 +199,19 @@ export default function MyAuctions({ signer, auctionServiceInstance }) {
                                     )}
                                 >
                                     <Moment date={new Date(auction.deadline)} fromNow={true} />
+                                </td>
+
+                                <td
+                                    className={classNames(
+                                        auctionIndex === 0 ? '' : 'border-t border-transparent',
+                                        'relative py-3.5 pl-3 pr-4 sm:pr-6 text-left text-sm font-medium cursor-copy'
+                                    )}
+                                >
+                                    <span
+                                        onClick={() => navigator.clipboard.writeText(auction.winner)}
+                                    >
+                                        {auction.winner ? auction.winner.substring(0, 4) + '...' + auction.winner.substring(auction.winner.length - 4) : ''}
+                                    </span>
                                 </td>
 
                                 <td
