@@ -58,12 +58,6 @@ export class AuctionService implements IAuctionService {
       console.log("Connecting to ETF chain");
       try {
         await api.init(JSON.stringify(chainSpec), this.CUSTOM_TYPES);
-      } catch (_e) {
-        // TODO: next will try to fetch the wasm blob but it doesn't need to
-        // since the transitive dependency is built with the desired wasm already 
-        // so we can ignore this error for now (no impact to functionality)
-        // but shall be addressed in the future
-      } finally {
         this.api = api;
         //Loading proxy contract
         this.contract = new ContractPromise(this.api.api, contractMetadata, process.env.NEXT_PUBLIC_CONTRACT_ADDRESS);
@@ -71,6 +65,11 @@ export class AuctionService implements IAuctionService {
           // update the state of the latest slot
           this.lastestSlot = this.api.latestSlot?.slot?.replace(/,/g, "");
         });
+      } catch (_e) {
+        // TODO: next will try to fetch the wasm blob but it doesn't need to
+        // since the transitive dependency is built with the desired wasm already 
+        // so we can ignore this error for now (no impact to functionality)
+        // but shall be addressed in the future
       }
     }
     if (signer) {
