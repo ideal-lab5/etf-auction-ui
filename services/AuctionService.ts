@@ -40,6 +40,17 @@ export class AuctionService implements IAuctionService {
   }
 
   async getEtfApi(signer = undefined): Promise<any> {
+    // ensure params are defined
+    if (process.env.NEXT_PUBLIC_NODE_DETAILS === undefined) {
+      console.error("Provide a valid value for NEXT_PUBLIC_NODE_DETAILS");
+      return Promise.resolve(null);
+    }
+
+    if (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS === undefined) {
+      console.error("Provide a valid value for NEXT_PUBLIC_CONTRACT_ADDRESS");
+      return Promise.resolve(null);
+    }
+
     if (!this.api) {
       await cryptoWaitReady()
       const etfjs = await import('@ideallabs/etf.js');
