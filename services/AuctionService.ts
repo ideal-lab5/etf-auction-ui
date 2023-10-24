@@ -278,6 +278,9 @@ export class AuctionService implements IAuctionService {
 
   async getBalance(): Promise<any> {
     let api = await this.getEtfApi();
+    if (api === undefined) {
+      return Promise.resolve(0);
+    }
     const { data: balance } = await api.api.query.system.account(process.env.NEXT_PUBLIC_CONTRACT_ADDRESS);
     return Promise.resolve(balance.free.toHuman() || undefined);
   }
