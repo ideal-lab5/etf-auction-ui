@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import Moment from 'react-moment';
 import NewAuction from './newAuction';
-import { container } from "tsyringe";
 
 function classNames(...classes) {
     return classes.filter(Boolean).join(' ')
@@ -27,7 +26,7 @@ export default function Auctions({ signer, auctionServiceInstance }) {
             let auctions = await auctionServiceInstance.getMyAuctions(signer);
             setAuctions(auctions);
         } catch (e) {
-            console.error(e);
+            console.log(e);
         }
         setLoading(false);
     }

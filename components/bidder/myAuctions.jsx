@@ -22,7 +22,7 @@ export default function MyAuctions({ signer, auctionServiceInstance }) {
             let auctions = await auctionServiceInstance.getMyBids(signer);
             setMyAuctions(auctions);
         } catch (e) {
-            console.error(e);
+            console.log(e);
         }
         setLoading(false);
     }
@@ -36,7 +36,7 @@ export default function MyAuctions({ signer, auctionServiceInstance }) {
             setErrors({ ...errors, [auction.id]: !success });
             queryAuctions();
         } catch (e) {
-            console.error(e);
+            console.log(e);
         }
         setProcessing(false);
     }
@@ -50,7 +50,7 @@ export default function MyAuctions({ signer, auctionServiceInstance }) {
             setErrors({ ...errors, [auction.id]: !success });
             queryAuctions();
         } catch (e) {
-            console.error(e);
+            console.log(e);
         }
         setProcessing(false);
     }

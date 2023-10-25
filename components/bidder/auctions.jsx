@@ -1,7 +1,7 @@
 import SearchBox from "../searchBox"
 import Moment from 'react-moment';
 import { useEffect, useState } from "react";
-import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/20/solid";
+import { XCircleIcon } from "@heroicons/react/20/solid";
 
 function classNames(...classes) {
     return classes.filter(Boolean).join(' ')
@@ -23,7 +23,7 @@ export default function Auctions({ signer, auctionServiceInstance }) {
             let auctions = await auctionServiceInstance.getPublishedAuctions(signer);
             setPublishedAuctions(auctions);
         } catch (e) {
-            console.error(e);
+            console.log(e);
         }
         setLoading(false);
     }
@@ -36,7 +36,7 @@ export default function Auctions({ signer, auctionServiceInstance }) {
             setErrors({ ...errors, [auction.id]: !success });
             queryAuctions();
         } catch (e) {
-            console.error(e);
+            console.log(e);
         }
         setProcessing(false);
     }
@@ -50,7 +50,7 @@ export default function Auctions({ signer, auctionServiceInstance }) {
             setErrors({ ...errors, [auction.id]: !success });
             queryAuctions();
         } catch (e) {
-            console.error(e);
+            console.log(e);
         }
         setProcessing(false);
     }

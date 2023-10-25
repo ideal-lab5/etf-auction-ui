@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import Auctions from "./auctions";
 
 export default function AuctioneerView({ signer, auctionServiceInstance }) {
