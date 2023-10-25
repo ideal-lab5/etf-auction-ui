@@ -40,19 +40,17 @@ export class AuctionService implements IAuctionService {
   }
 
   async getEtfApi(signer = undefined): Promise<any> {
-    // ensure params are defined
-    if (process.env.NEXT_PUBLIC_NODE_DETAILS === undefined) {
-      console.error("Provide a valid value for NEXT_PUBLIC_NODE_DETAILS");
-      return Promise.resolve(null);
-    }
-
-    if (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS === undefined) {
-      console.error("Provide a valid value for NEXT_PUBLIC_CONTRACT_ADDRESS");
-      return Promise.resolve(null);
-    }
-
     if (!this.api) {
-      await cryptoWaitReady()
+      // ensure params are defined
+      if (process.env.NEXT_PUBLIC_NODE_DETAILS === undefined) {
+        console.error("Provide a valid value for NEXT_PUBLIC_NODE_DETAILS");
+        return Promise.resolve(null);
+      }
+      if (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS === undefined) {
+        console.error("Provide a valid value for NEXT_PUBLIC_CONTRACT_ADDRESS");
+        return Promise.resolve(null);
+      }
+      await cryptoWaitReady();
       const etfjs = await import('@ideallabs/etf.js');
       let api = new etfjs.Etf(process.env.NEXT_PUBLIC_NODE_DETAILS);
       console.log("Connecting to ETF chain");
@@ -222,7 +220,6 @@ export class AuctionService implements IAuctionService {
   private async revealBids(signer: any, auctionId: string, deadline: number): Promise<any> {
     let api = await this.getEtfApi(signer.signer);
     // fetch ciphertexts from the appropriate auction contract and decrypt them
-    const storageDepositLimit = null;
     const { result, output } = await this.contract.query.getEncryptedBids(
       signer.address,
       {
@@ -230,7 +227,7 @@ export class AuctionService implements IAuctionService {
           refTime: this.MAX_CALL_WEIGHT,
           proofSize: this.PROOFSIZE,
         }),
-        storageDepositLimit,
+        storageDepositLimit: null,
       },
       auctionId,
     );
@@ -260,7 +257,6 @@ export class AuctionService implements IAuctionService {
 
   async getWinner(signer: any, auctionId: string): Promise<any> {
     let api = await this.getEtfApi(signer.signer);
-    const storageDepositLimit = null;
     const { result, output } =
       await this.contract.query.getWinner(
         signer.address,
@@ -269,7 +265,7 @@ export class AuctionService implements IAuctionService {
             refTime: this.MAX_CALL_WEIGHT,
             proofSize: this.PROOFSIZE,
           }),
-          storageDepositLimit,
+          storageDepositLimit: null,
         },
         auctionId,
       );
@@ -328,7 +324,6 @@ export class AuctionService implements IAuctionService {
 
   async getPublishedAuctions(signer: any): Promise<Auction[]> {
     let api = await this.getEtfApi();
-    const storageDepositLimit = null
     const { output } = await this.contract.query.getAuctions(
       signer.address,
       {
@@ -336,7 +331,7 @@ export class AuctionService implements IAuctionService {
           refTime: this.MAX_CALL_WEIGHT,
           proofSize: this.PROOFSIZE,
         }),
-        storageDepositLimit,
+        storageDepositLimit: null,
       }
     );
     const auctionsData = output?.toHuman()?.Ok?.Ok || [];
@@ -365,7 +360,6 @@ export class AuctionService implements IAuctionService {
 
   async getMyAuctions(owner: any): Promise<Auction[]> {
     let api = await this.getEtfApi(owner);
-    const storageDepositLimit = null
     const { output } = await this.contract.query.getAuctionsByOwner(
       owner.address,
       {
@@ -373,7 +367,7 @@ export class AuctionService implements IAuctionService {
           refTime: this.MAX_CALL_WEIGHT,
           proofSize: this.PROOFSIZE,
         }),
-        storageDepositLimit,
+        storageDepositLimit: null,
       },
       owner.address
     );
@@ -400,7 +394,6 @@ export class AuctionService implements IAuctionService {
 
   async getMyBids(bidder: any): Promise<Auction[]> {
     let api = await this.getEtfApi();
-    const storageDepositLimit = null
     const { output } = await this.contract.query.getAuctionsByBidder(
       bidder.address,
       {
@@ -408,7 +401,7 @@ export class AuctionService implements IAuctionService {
           refTime: this.MAX_CALL_WEIGHT,
           proofSize: this.PROOFSIZE,
         }),
-        storageDepositLimit,
+        storageDepositLimit: null
       },
       bidder.address
     );
