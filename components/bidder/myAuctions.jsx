@@ -181,7 +181,7 @@ export default function MyAuctions({ signer, auctionServiceInstance }) {
                                         'px-3 py-3.5 text-sm text-right text-gray-500'
                                     )}
                                 >
-                                    {auction.minBid?.toFixed(2)} <small>{auction.minBidUnit}</small>
+                                    {auction.minBid} <small>{auction.minBidUnit}</small>
                                 </td>
                                 <td
                                     className={classNames(

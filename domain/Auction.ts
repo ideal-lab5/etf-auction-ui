@@ -41,7 +41,7 @@ export class Auction {
     this.deposit = deposit;
     this.bids = bids;
     this.units = 0;
-    this.minBid = 0;
+    this.minBid = deposit;
     this.minBidUnit = "";
     this.publishedAt = publishedAt;
     this.deadline = deadline;

@@ -30,7 +30,7 @@ Create a local `.env.local` and fill in the details below. The contract must be 
 
 ``` shell
 NEXT_PUBLIC_CONTRACT_ADDRESS="the address of the proxy contract"
-NEXT_PUBLIC_NODE_DETAIL="fully qualified url of the node"
+NEXT_PUBLIC_NODE_DETAILS="fully qualified url of the node"
 ```
 ### Run from sources
 
