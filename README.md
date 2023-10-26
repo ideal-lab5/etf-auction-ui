@@ -43,7 +43,7 @@ npm i && run dev
 
 #### Run
 
-The project can be run from the docker image by running:
+The project can be run from the docker image by running: 
 
 ``` bash
 docker pull ideallabs/etf-auction-ui

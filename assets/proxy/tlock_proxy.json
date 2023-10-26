@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0xfed13c3bb41ecc5eb0ba0b5ca58f4537bec3deba8215e0439234c130055ad824",
+    "hash": "0xa5930fb4ee8584d54279aabc2973bdaedb51316757d238b2d9b8ccb0f489390f",
     "language": "ink! 4.3.0",
     "compiler": "rustc 1.74.0-nightly",
     "build_info": {
@@ -108,7 +108,15 @@
         "type": 8
       }
     },
-    "events": [],
+    "events": [
+      {
+        "args": [],
+        "docs": [
+          "A proposal has been accepted"
+        ],
+        "label": "Success"
+      }
+    ],
     "lang_error": {
       "displayName": [
         "ink",

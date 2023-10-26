@@ -5,8 +5,8 @@ import { ContractPromise } from '@polkadot/api-contract';
 import { cryptoWaitReady } from '@polkadot/util-crypto';
 import { SHA3 } from 'sha3';
 import { BN, BN_ONE } from "@polkadot/util";
-import contractMetadata from '../assets/proxy/tlock_proxy.json';
 import chainSpec from "../assets/etfTestSpecRaw.json";
+import abi from '../assets/proxy/tlock_proxy.json';
 import { SubmittableResult } from "@polkadot/api";
 
 @singleton()
@@ -60,7 +60,7 @@ export class AuctionService implements IAuctionService {
         await api.init(JSON.stringify(chainSpec), this.CUSTOM_TYPES);
         this.api = api;
         //Loading proxy contract
-        this.contract = new ContractPromise(this.api.api, contractMetadata, process.env.NEXT_PUBLIC_CONTRACT_ADDRESS);
+        this.contract = new ContractPromise(this.api.api, abi, process.env.NEXT_PUBLIC_CONTRACT_ADDRESS);
         this.api.eventEmitter.on('blockHeader', () => {
           // update the state of the latest slot
           this.lastestSlot = this.api.latestSlot?.slot?.replace(/,/g, "");
