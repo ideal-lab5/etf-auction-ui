@@ -12,7 +12,7 @@
   "dependencies": {
     "@headlessui/react": "^1.7.4",
     "@heroicons/react": "^2.0.13",
-    "@ideallabs/etf.js": "^0.1.1-dev",
+    "@ideallabs/etf.js": "^0.1.6-dev",
     "@polkadot/api": "^10.9.1",
     "@polkadot/api-contract": "^10.9.1",
     "@polkadot/extension-dapp": "^0.46.5",

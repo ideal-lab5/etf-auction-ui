@@ -3,11 +3,11 @@ import { IAuctionService } from "./IAuctionService";
 import { singleton } from "tsyringe";
 import { ContractPromise } from '@polkadot/api-contract';
 import { cryptoWaitReady } from '@polkadot/util-crypto';
-import { SHA3 } from 'sha3';
 import { BN, BN_ONE } from "@polkadot/util";
 import chainSpec from "../assets/etfTestSpecRaw.json";
 import abi from '../assets/proxy/tlock_proxy.json';
 import { SubmittableResult } from "@polkadot/api";
+import e from "cors";
 
 @singleton()
 export class AuctionService implements IAuctionService {
@@ -54,7 +54,7 @@ export class AuctionService implements IAuctionService {
     if (!this.api) {
       await cryptoWaitReady()
       const etfjs = await import('@ideallabs/etf.js');
-      let api = new etfjs.Etf(process.env.NEXT_PUBLIC_NODE_DETAILS);
+      let api = new etfjs.Etf(process.env.NEXT_PUBLIC_NODE_DETAILS, true);
       console.log("Connecting to ETF chain");
       try {
         await api.init(JSON.stringify(chainSpec), this.CUSTOM_TYPES);
@@ -126,18 +126,35 @@ export class AuctionService implements IAuctionService {
     });
   }
 
+  private async scheduleReveal(signer: any, auctionId: string, amount: number, deadline: number): Promise<any> {
+    let api = await this.getEtfApi(signer.signer);
+    // the call to delay
+    let contractInnerCall = this.contract.tx.revealBid({
+      gasLimit: api.api.registry.createType('WeightV2', {
+        refTime: this.MAX_CALL_WEIGHT2,
+        proofSize: this.PROOFSIZE,
+      }),
+      storageDepositLimit: null,
+    },
+      auctionId,
+      {
+        bidder: api.createType('AccountId', signer.address),
+        bid: amount,
+      }
+    )
+    // prepare delayed call
+    let outerCall = api.delay(contractInnerCall, 127, deadline);
+    await outerCall.signAndSend(signer.address, result => {
+      if (result.status.isInBlock) {
+        console.log('in block')
+      }
+    });
+  }
+
   async bid(signer: any, auctionId: string, deadline: number, amount: number): Promise<boolean> {
     let api = await this.getEtfApi(signer.signer);
-    let amountString = amount.toString();
-    const hasher = new SHA3(256)
-    hasher.update(amountString);
-    const hash = hasher.digest();
-    hasher.update(new Date().getTime().toString());
-    const seed = hasher.digest();
-    // the seed shouldn't be reused
-    let timelockedBid = api.encrypt(amountString, 1, [deadline], seed);
     // now we want to call the publish function of the contract
-    const value = 1000000;
+    const value = 1000000; // value to lock when bidding
     async function sendContractTx(contract: any, auctionService: AuctionService): Promise<SubmittableResult> {
       return new Promise(async (resolve, reject) => {
         try {
@@ -150,11 +167,7 @@ export class AuctionService implements IAuctionService {
               storageDepositLimit: null,
               value,
             },
-              auctionId,
-              timelockedBid.ct.aes_ct.ciphertext,
-              timelockedBid.ct.aes_ct.nonce,
-              timelockedBid.ct.etf_ct[0],
-              Array.from(hash),
+              auctionId
             ).signAndSend(signer.address, (result: SubmittableResult) => {
               // Log the transaction status
               console.log('Transaction status:', result.status.type);
@@ -172,15 +185,19 @@ export class AuctionService implements IAuctionService {
       });
     };
 
-    return await sendContractTx(this.contract, this).then(() => Promise.resolve(true)).catch(() => {
-      console.log("Error sending transaction");
+    return await sendContractTx(this.contract, this).then(() => {
+      // schedule reveal
+      return this.scheduleReveal(signer, auctionId, amount, deadline).then(() => {
+        return Promise.resolve(true);
+      });
+    }).catch((error) => {
+      console.log("Error sending transaction", error);
       return Promise.resolve(false);
     });
   }
 
   async completeAuction(signer: any, auctionId: string, deadline: number): Promise<boolean> {
     let api = await this.getEtfApi(signer.signer);
-    let revealedBids = await this.revealBids(signer.signer, auctionId, deadline);
     async function sendContractTx(contract: any): Promise<SubmittableResult> {
       return new Promise(async (resolve, reject) => {
         try {
@@ -192,8 +209,7 @@ export class AuctionService implements IAuctionService {
               }),
               storageDepositLimit: null,
             },
-              auctionId,
-              revealedBids
+              auctionId
             ).signAndSend(signer.address, (result: SubmittableResult) => {
               // Log the transaction status
               console.log('Transaction status:', result.status.type);
@@ -215,47 +231,6 @@ export class AuctionService implements IAuctionService {
       return Promise.resolve(false);
     });
 
-  }
-
-  /// fetch ciphertext from currently loaded auction contract and decrypt each
-  /// returns an array of (AccountId, Proposal)
-  private async revealBids(signer: any, auctionId: string, deadline: number): Promise<any> {
-    let api = await this.getEtfApi(signer.signer);
-    // fetch ciphertexts from the appropriate auction contract and decrypt them
-    const storageDepositLimit = null;
-    const { result, output } = await this.contract.query.getEncryptedBids(
-      signer.address,
-      {
-        gasLimit: api.api.registry.createType('WeightV2', {
-          refTime: this.MAX_CALL_WEIGHT,
-          proofSize: this.PROOFSIZE,
-        }),
-        storageDepositLimit,
-      },
-      auctionId,
-    );
-    if (!result.err) {
-      let revealedBids = [];
-      let cts = output.toHuman().Ok.Ok;
-      for (const c of cts) {
-        let bidder = c[0];
-        let proposal = api.createType('Proposal', c[1]);
-        let plaintext = await api.decrypt(
-          proposal.ciphertext,
-          proposal.nonce,
-          [proposal.capsule],
-          [deadline],
-        );
-        let bid = Number.parseInt(String.fromCharCode(...plaintext));
-        let revealedBid = {
-          bidder: api.createType('AccountId', bidder),
-          bid: bid,
-        };
-        revealedBids.push(revealedBid);
-      }
-      return Promise.resolve(revealedBids);
-    }
-    return Promise.resolve([]);
   }
 
   async getWinner(signer: any, auctionId: string): Promise<any> {
