@@ -19,9 +19,8 @@ export default function NewAuction({ onCancel, onSave, signer, auctionServiceIns
             let result = await auctionServiceInstance.newAuction(
                 signer,
                 event.target.title.value,
-                event.target.assetId.value,
                 event.target.deadline.value,
-                event.target.salary.value
+                event.target.deposit.value
             );
 
             if (!result) {
@@ -68,22 +67,6 @@ export default function NewAuction({ onCancel, onSave, signer, auctionServiceIns
 
                         <div className="sm:col-span-3">
                             <label htmlFor="last-name" className="block text-sm font-medium text-gray-700">
-                                NFT/Asset Id *
-                            </label>
-                            <div className="mt-1">
-                                <input
-                                    type="number"
-                                    required
-                                    name="assetId"
-                                    placeholder="Ex. 100"
-                                    id="assetId"
-                                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="sm:col-span-3">
-                            <label htmlFor="last-name" className="block text-sm font-medium text-gray-700">
                                 Deadline (Number of minutes from now) *
                             </label>
                             <div className="mt-1">
@@ -105,10 +88,10 @@ export default function NewAuction({ onCancel, onSave, signer, auctionServiceIns
                             <div className="mt-1">
                                 <input
                                     type="number"
-                                    name="salary"
+                                    name="deposit"
                                     required
                                     placeholder="Ex. 100"
-                                    id="salary"
+                                    id="deposit"
                                     className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                 />
                             </div>

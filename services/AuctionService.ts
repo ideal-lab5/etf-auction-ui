@@ -13,7 +13,6 @@ import e from "cors";
 export class AuctionService implements IAuctionService {
   public api: any;
   private contract: any;
-  private lastestSlot: any;
   private readonly MAX_CALL_WEIGHT2 = new BN(1_000_000_000_000).isub(BN_ONE);
   private readonly MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE);
   private readonly PROOFSIZE = new BN(1_000_000_000);
@@ -61,10 +60,6 @@ export class AuctionService implements IAuctionService {
         this.api = api;
         //Loading proxy contract
         this.contract = new ContractPromise(this.api.api, abi, process.env.NEXT_PUBLIC_CONTRACT_ADDRESS);
-        this.api.eventEmitter.on('blockHeader', () => {
-          // update the state of the latest slot
-          this.lastestSlot = this.api.latestSlot?.slot?.replace(/,/g, "");
-        });
       } catch (_e) {
         // TODO: next will try to fetch the wasm blob but it doesn't need to
         // since the transitive dependency is built with the desired wasm already 
@@ -82,12 +77,15 @@ export class AuctionService implements IAuctionService {
     throw new Error("Method not implemented.");
   }
 
-  async newAuction(signer: any, title: string, assetId: number, duration: number, deposit: number): Promise<boolean> {
+  async newAuction(signer: any, title: string, duration: number, deposit: number): Promise<boolean> {
     let api = await this.getEtfApi(signer.signer)
     // deadline ~ number of minutes => convert to number of slots
     let distance = duration * 60 / (this.TIME)
     // since we only need one value, we don't really need a slot scheduler
-    let target = parseInt(this.lastestSlot) + distance
+    let target = parseInt(api.latestBlockNumber) + distance
+    //TODO we need to create a Uint8Array from title
+    let name = new Uint8Array(48);
+    name[0] = 42;
     async function sendContractTx(contract: any, auctionService: AuctionService): Promise<SubmittableResult> {
       return new Promise(async (resolve, reject) => {
         try {
@@ -99,8 +97,7 @@ export class AuctionService implements IAuctionService {
               }),
               storageDepositLimit: null,
             },
-              title,
-              assetId,
+              name,
               target,
               deposit,
             ).signAndSend(signer.address, (result: SubmittableResult) => {
