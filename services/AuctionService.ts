@@ -83,7 +83,7 @@ export class AuctionService implements IAuctionService {
     let distance = duration * 60 / (this.TIME)
     // since we only need one value, we don't really need a slot scheduler
     let target = parseInt(api.latestBlockNumber) + distance
-    //TODO we need to create a Uint8Array from title
+    //TODO we need to create a Uint8Array from title.
     let name = new Uint8Array(48);
     name[0] = 42;
     async function sendContractTx(contract: any, auctionService: AuctionService): Promise<SubmittableResult> {
