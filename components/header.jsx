@@ -47,13 +47,15 @@ function classNames(...classes) {
 
 export default function Header({ onChangeOption, onConnect, isConnected, connectedAddress, auctionServiceInstance }) {
 
-  
+
   const [latestBlockNumber, setLatestBlockNumber] = useState(0);
 
   useEffect(() => {
-      auctionServiceInstance.api.eventEmitter.on('blockHeader', () => {
-          setLatestBlockNumber(auctionServiceInstance.api.latestBlockNumber);
+    auctionServiceInstance.getEtfApi().then((api) => {
+      api.eventEmitter.on('blockHeader', () => {
+        setLatestBlockNumber(auctionServiceInstance.api.latestBlockNumber);
       });
+    });
   }, []);
 
   return (

@@ -10,7 +10,7 @@ import { SubmittableResult } from "@polkadot/api";
 
 @singleton()
 export class AuctionService implements IAuctionService {
-  public api: any;
+  private api: any;
   private contract: any;
   private readonly MAX_CALL_WEIGHT2 = new BN(1_000_000_000_000).isub(BN_ONE);
   private readonly MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE);
