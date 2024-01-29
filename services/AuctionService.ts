@@ -7,7 +7,6 @@ import { BN, BN_ONE } from "@polkadot/util";
 import chainSpec from "../assets/etfTestSpecRaw.json";
 import abi from '../assets/proxy/tlock_proxy.json';
 import { SubmittableResult } from "@polkadot/api";
-import e from "cors";
 
 @singleton()
 export class AuctionService implements IAuctionService {
@@ -51,13 +50,17 @@ export class AuctionService implements IAuctionService {
     }
 
     if (!this.api) {
-      await cryptoWaitReady()
-      const etfjs = await import('@ideallabs/etf.js');
-      let api = new etfjs.Etf(process.env.NEXT_PUBLIC_NODE_DETAILS, true);
-      console.log("Connecting to ETF chain");
+    
       try {
+        await cryptoWaitReady()
+        const etfjs = await import('@ideallabs/etf.js');
+        let api = new etfjs.Etf(process.env.NEXT_PUBLIC_NODE_DETAILS, false);
+        console.log("Connecting to ETF chain");
         await api.init(JSON.stringify(chainSpec), this.CUSTOM_TYPES);
         this.api = api;
+        if (signer) {
+          this.api.api.setSigner(signer);
+        }
         //Loading proxy contract
         this.contract = new ContractPromise(this.api.api, abi, process.env.NEXT_PUBLIC_CONTRACT_ADDRESS);
       } catch (_e) {
@@ -67,9 +70,6 @@ export class AuctionService implements IAuctionService {
         // but shall be addressed in the future
       }
     }
-    if (signer) {
-      this.api.api.setSigner(signer);
-    }
     return Promise.resolve(this.api);
   }
 
@@ -77,15 +77,13 @@ export class AuctionService implements IAuctionService {
     throw new Error("Method not implemented.");
   }
 
-  async newAuction(signer: any, title: string, duration: number, deposit: number): Promise<boolean> {
+  async newAuction(
+    signer: any,
+    title: string,
+    deadline: number,
+    deposit: number
+  ): Promise<boolean> {
     let api = await this.getEtfApi(signer.signer)
-    // deadline ~ number of minutes => convert to number of slots
-    let distance = duration * 60 / (this.TIME)
-    // since we only need one value, we don't really need a slot scheduler
-    let target = parseInt(api.latestBlockNumber) + distance
-    //TODO we need to create a Uint8Array from title.
-    let name = new Uint8Array(48);
-    name[0] = 42;
     async function sendContractTx(contract: any, auctionService: AuctionService): Promise<SubmittableResult> {
       return new Promise(async (resolve, reject) => {
         try {
@@ -97,11 +95,10 @@ export class AuctionService implements IAuctionService {
               }),
               storageDepositLimit: null,
             },
-              name,
-              target,
+              title.padEnd(48, '1'),
+              deadline,
               deposit,
             ).signAndSend(signer.address, (result: SubmittableResult) => {
-              // Log the transaction status
               console.log('Transaction status:', result.status.type);
               if (result.status.isInBlock || result.status.isFinalized) {
                 console.log(`Transaction included in block hash ${result.status.asInBlock}`);
@@ -321,7 +318,7 @@ export class AuctionService implements IAuctionService {
         parseInt(value.assetId?.replace(/,/g, "") || 0),
         value.deposit,
         parseInt(value.published?.replace(/,/g, "") || 0),
-        this.estimateTime(parseInt(api.getLatestSlot()), deadlineSlot),
+        value.deadline,
         deadlineSlot,
         value.owner,
         parseInt(value.status),
@@ -357,7 +354,7 @@ export class AuctionService implements IAuctionService {
         parseInt(value.assetId?.replace(/,/g, "") || 0),
         value.deposit,
         parseInt(value.published?.replace(/,/g, "") || 0),
-        this.estimateTime(parseInt(api.getLatestSlot()), deadlineSlot),
+        value.deadline,
         deadlineSlot,
         value.owner,
         parseInt(value.status),
@@ -394,7 +391,7 @@ export class AuctionService implements IAuctionService {
         parseInt(value.assetId?.replace(/,/g, "") || 0),
         value.deposit,
         parseInt(value.published?.replace(/,/g, "") || 0),
-        this.estimateTime(parseInt(api.getLatestSlot()), deadlineSlot),
+        value.deadline,
         deadlineSlot,
         value.owner,
         parseInt(value.status),
@@ -407,17 +404,4 @@ export class AuctionService implements IAuctionService {
     const auctions = await Promise.all(promises);
     return Promise.resolve(auctions);
   }
-
-  // precision at seconds instead of ms since our target TIME is measured in seconds
-  private estimateTime(currentSlot: number, deadline: number): Date {
-    // get number of slots left
-    const slotsRemaining = deadline - currentSlot
-    // convert to time (s)
-    let secondsRemaining = slotsRemaining * this.TIME
-    // get deadline as a number of seconds from now
-    let t = new Date()
-    t.setSeconds(t.getSeconds() + secondsRemaining)
-    return t
-  }
-
 }
