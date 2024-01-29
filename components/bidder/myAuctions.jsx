@@ -2,6 +2,7 @@ import SearchBox from "../searchBox"
 import Moment from 'react-moment';
 import { useEffect, useState } from "react";
 import { XCircleIcon } from "@heroicons/react/20/solid";
+import Tooltip from "../tooltip";
 
 function classNames(...classes) {
     return classes.filter(Boolean).join(' ')
@@ -118,7 +119,9 @@ export default function MyAuctions({ signer, auctionServiceInstance }) {
                                 scope="col"
                                 className="hidden px-3 py-3.5 text-center text-sm font-semibold text-gray-900 lg:table-cell"
                             >
-                                Deadline
+                                <Tooltip message={"block number"}>
+                                    <span>Deadline</span>
+                                </Tooltip>
                             </th>
                             <th
                                 scope="col"
@@ -154,8 +157,11 @@ export default function MyAuctions({ signer, auctionServiceInstance }) {
                                         'relative py-4 pl-4 sm:pl-6 pr-3 text-sm'
                                     )}
                                 >
-                                    <div className="font-medium text-gray-900">
-                                        {auction.title}
+                                    <div className="copy font-medium text-gray-900" onClick={() => navigator.clipboard.writeText(auction.title)}>
+                                        {auction.title.length <= 12 ?
+                                            auction.title :
+                                            auction.title.slice(0, 6) + '...' + auction.title.slice(auction.title.length - 6)
+                                        }
                                     </div>
                                     {auctionIndex !== 0 ? <div className="absolute right-0 left-6 -top-px h-px bg-gray-200" /> : null}
                                 </td>
@@ -198,7 +204,7 @@ export default function MyAuctions({ signer, auctionServiceInstance }) {
                                         'hidden px-3 py-3.5 text-sm text-center text-gray-500 lg:table-cell'
                                     )}
                                 >
-                                    <Moment date={new Date(auction.deadline)} fromNow={true} />
+                                    {auction.deadline}
                                 </td>
 
                                 <td
@@ -214,9 +220,9 @@ export default function MyAuctions({ signer, auctionServiceInstance }) {
                                                 auction.winner ? auction.winner : ''
                                             )}
                                     >
-                                        { auction.winner ? 
-                                            auction.winner.substring(0, 4) + 
-                                                '...' + auction.winner.substring(auction.winner.length - 4) : ''
+                                        {auction.winner ?
+                                            auction.winner.substring(0, 4) +
+                                            '...' + auction.winner.substring(auction.winner.length - 4) : ''
                                         }
                                     </span>
                                 </td>
