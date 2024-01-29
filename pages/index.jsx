@@ -1,7 +1,7 @@
 import Head from "next/head";
 import { useEffect, useState } from "react";
 import { container } from "tsyringe";
-import BidderView from "../components/bidder/bidderView";
+import BidderView from "../components/auctioneer/bidder/bidderView";
 import Header from "../components/header";
 import AuctioneerView from "../components/auctioneer/auctioneerView";
 import { AuctionService } from "../services/AuctionService";

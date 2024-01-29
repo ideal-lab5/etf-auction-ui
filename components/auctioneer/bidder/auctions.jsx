@@ -1,8 +1,8 @@
-import SearchBox from "../searchBox"
+import SearchBox from "../../searchBox"
 import Moment from 'react-moment';
 import { useEffect, useState } from "react";
 import { XCircleIcon } from "@heroicons/react/20/solid";
-import Tooltip from "../tooltip";
+import Tooltip from "../../tooltip";
 
 function classNames(...classes) {
     return classes.filter(Boolean).join(' ')

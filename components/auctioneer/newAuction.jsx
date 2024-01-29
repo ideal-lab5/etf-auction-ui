@@ -32,7 +32,7 @@ export default function NewAuction({ onCancel, onSave, signer, auctionServiceIns
                 signer,
                 event.target.title.value,
                 event.target.deadline.value,
-                event.target.salary.value
+                event.target.deposit.value
             );
 
             if (!result) {
@@ -133,10 +133,10 @@ export default function NewAuction({ onCancel, onSave, signer, auctionServiceIns
                             <div className="mt-1">
                                 <input
                                     type="number"
-                                    name="salary"
+                                    name="deposit"
                                     required
                                     placeholder="Ex. 100"
-                                    id="salary"
+                                    id="deposit"
                                     className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                 />
                             </div>
