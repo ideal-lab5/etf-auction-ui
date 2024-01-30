@@ -1,4 +1,5 @@
 import { XCircleIcon } from "@heroicons/react/20/solid";
+import { compactStripLength } from "@polkadot/util";
 import { useEffect, useState } from "react";
 
 export default function NewAuction({ onCancel, onSave, signer, auctionServiceInstance }) {
@@ -31,8 +32,8 @@ export default function NewAuction({ onCancel, onSave, signer, auctionServiceIns
             let result = await auctionServiceInstance.newAuction(
                 signer,
                 event.target.title.value,
-                event.target.deadline.value,
-                event.target.deposit.value
+                parseInt(event.target.deadline.value),
+                parseInt(event.target.deposit.value)
             );
 
             if (!result) {
