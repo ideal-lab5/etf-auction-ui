@@ -147,10 +147,8 @@ export class AuctionService implements IAuctionService {
         bid: amount,
       }
     )
-    let diffBlocks = deadline - api.latestBlockNumber;
-    let slot = api.getLatestSlot() + 2 * diffBlocks;
     // prepare delayed call
-    let outerCall = api.delay(contractInnerCall, 127, slot);
+    let outerCall = api.delay(contractInnerCall, 127, deadline);
     await outerCall.call.signAndSend(signer.address, result => {
       if (result.status.isInBlock) {
         console.log('in block')
@@ -215,9 +213,8 @@ export class AuctionService implements IAuctionService {
     },
       auctionId
     );
-    let slot = parseInt(api.latestSlot.slot.replaceAll(",", "")) + (deadline - api.latestBlockNumber);
     // prepare delayed call
-    let outerCall = api.delay(contractInnerCall, 127, slot);
+    let outerCall = api.delay(contractInnerCall, 127, deadline);
     console.log(outerCall)
     await outerCall.call.signAndSend(signer.address, result => {
       if (result.status.isInBlock) {
