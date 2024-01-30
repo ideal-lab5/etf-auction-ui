@@ -50,7 +50,7 @@ export class AuctionService implements IAuctionService {
     }
 
     if (!this.api) {
-    
+
       try {
         await cryptoWaitReady()
         const etfjs = await import('@ideallabs/etf.js');
@@ -58,9 +58,6 @@ export class AuctionService implements IAuctionService {
         console.log("Connecting to ETF chain");
         await api.init(JSON.stringify(chainSpec), this.CUSTOM_TYPES);
         this.api = api;
-        if (signer) {
-          this.api.api.setSigner(signer);
-        }
         //Loading proxy contract
         this.contract = new ContractPromise(this.api.api, abi, process.env.NEXT_PUBLIC_CONTRACT_ADDRESS);
       } catch (_e) {
@@ -69,6 +66,9 @@ export class AuctionService implements IAuctionService {
         // so we can ignore this error for now (no impact to functionality)
         // but shall be addressed in the future
       }
+    }
+    if (signer) {
+      this.api.api.setSigner(signer);
     }
     return Promise.resolve(this.api);
   }
@@ -98,11 +98,13 @@ export class AuctionService implements IAuctionService {
               title.padEnd(48, '1'),
               deadline,
               deposit,
-            ).signAndSend(signer.address, (result: SubmittableResult) => {
+            ).signAndSend(signer.address, (result: any) => {
               console.log('Transaction status:', result.status.type);
               if (result.status.isInBlock || result.status.isFinalized) {
                 console.log(`Transaction included in block hash ${result.status.asInBlock}`);
-                resolve(result);
+                const eventValue = api.createType('AccountId', result.contractEvents[0].event.data);
+                console.log("Extracted:", JSON.stringify(eventValue));
+                resolve(eventValue);
               }
 
             });
@@ -114,8 +116,17 @@ export class AuctionService implements IAuctionService {
       });
     };
 
-    return await sendContractTx(this.contract, this).then(() => Promise.resolve(true)).catch(() => {
-      console.log("Error sending transaction");
+    return await sendContractTx(this.contract, this).then((auctionId: any) => {
+      if (auctionId) {
+        console.log(`Scheduling complete for auction ${auctionId}`);
+        return this.scheduleComplete(signer, auctionId, deadline + 2).then(() => {
+          return Promise.resolve(true);
+        });
+      } else
+        return Promise.resolve(true);
+
+    }).catch((error) => {
+      console.log("Error sending transaction", error);
       return Promise.resolve(false);
     });
   }
@@ -136,9 +147,11 @@ export class AuctionService implements IAuctionService {
         bid: amount,
       }
     )
+    let diffBlocks = deadline - api.latestBlockNumber;
+    let slot = api.getLatestSlot() + 2 * diffBlocks;
     // prepare delayed call
-    let outerCall = api.delay(contractInnerCall, 127, deadline);
-    await outerCall.signAndSend(signer.address, result => {
+    let outerCall = api.delay(contractInnerCall, 127, slot);
+    await outerCall.call.signAndSend(signer.address, result => {
       if (result.status.isInBlock) {
         console.log('in block')
       }
@@ -187,6 +200,29 @@ export class AuctionService implements IAuctionService {
     }).catch((error) => {
       console.log("Error sending transaction", error);
       return Promise.resolve(false);
+    });
+  }
+
+  private async scheduleComplete(signer: any, auctionId: string, deadline: number): Promise<any> {
+    let api = await this.getEtfApi(signer.signer);
+    // the call to delay
+    let contractInnerCall = this.contract.tx.complete({
+      gasLimit: api.api.registry.createType('WeightV2', {
+        refTime: new BN(1_290_000_000_000),
+        proofSize: new BN(5_000_000_000_000),
+      }),
+      storageDepositLimit: null,
+    },
+      auctionId
+    )
+    let diffBlocks = deadline - api.latestBlockNumber;
+    let slot = api.getLatestSlot() + 2 * diffBlocks;
+    // prepare delayed call
+    let outerCall = api.delay(contractInnerCall, 127, slot);
+    await outerCall.call.signAndSend(signer.address, result => {
+      if (result.status.isInBlock) {
+        console.log('in block')
+      }
     });
   }
 
