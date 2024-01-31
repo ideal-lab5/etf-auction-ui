@@ -102,11 +102,16 @@ export class AuctionService implements IAuctionService {
               console.log('Transaction status:', result.status.type);
               if (result.status.isInBlock || result.status.isFinalized) {
                 console.log(`Transaction included in block hash ${result.status.asInBlock}`);
-                const eventValue = api.createType('AccountId', result.contractEvents[0].event.data);
-                console.log("Extracted:", JSON.stringify(eventValue));
+                let eventValue;
+                result.contractEvents.forEach(e => {
+                  if (e["event"]["identifier"] == "AuctionCreated") {
+                    eventValue = e["args"][0];
+                    console.log("Extracted:", JSON.stringify(eventValue));
+                  }
+                });
                 resolve(eventValue);
               }
-
+              
             });
         } catch (error) {
           // Reject the promise if any error arises
@@ -215,7 +220,6 @@ export class AuctionService implements IAuctionService {
     );
     // prepare delayed call
     let outerCall = api.delay(contractInnerCall, 127, deadline);
-    console.log(outerCall)
     await outerCall.call.signAndSend(signer.address, result => {
       if (result.status.isInBlock) {
         console.log('in block')
