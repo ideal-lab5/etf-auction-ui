@@ -2,6 +2,7 @@ import SearchBox from "../searchBox"
 import Moment from 'react-moment';
 import { useEffect, useState } from "react";
 import { XCircleIcon } from "@heroicons/react/20/solid";
+import Tooltip from "../tooltip";
 
 function classNames(...classes) {
     return classes.filter(Boolean).join(' ')
@@ -120,16 +121,18 @@ export default function Auctions({ signer, auctionServiceInstance }) {
                                 scope="col"
                                 className="hidden px-3 py-3.5 text-center text-sm font-semibold text-gray-900 lg:table-cell"
                             >
-                                Deadline
+                                <Tooltip message={"block number"}>
+                                    <span>Deadline</span>
+                                </Tooltip>
                             </th>
-                            {currentTab === 1 ? 
-                            <th
-                                scope="col"
-                                className="hidden px-3 py-3.5 text-center text-sm font-semibold text-gray-900 lg:table-cell"
-                            >
-                                Winner
-                            </th>
-                            : <th></th> }
+                            {currentTab === 1 ?
+                                <th
+                                    scope="col"
+                                    className="hidden px-3 py-3.5 text-center text-sm font-semibold text-gray-900 lg:table-cell"
+                                >
+                                    Winner
+                                </th>
+                                : <th></th>}
                             <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
                                 <span className="sr-only">Actions</span>
                             </th>
@@ -158,8 +161,11 @@ export default function Auctions({ signer, auctionServiceInstance }) {
                                         'relative py-4 pl-4 sm:pl-6 pr-3 text-sm'
                                     )}
                                 >
-                                    <div className="font-medium text-gray-900">
-                                        {auction.title}
+                                    <div className="copy font-medium text-gray-900" onClick={() => navigator.clipboard.writeText(auction.title)}>
+                                        {auction.title.length <= 12 ?
+                                            auction.title :
+                                            auction.title.slice(0, 6) + '...' + auction.title.slice(auction.title.length - 6)
+                                        }
                                     </div>
                                     {auctionIndex !== 0 ? <div className="absolute right-0 left-6 -top-px h-px bg-gray-200" /> : null}
                                 </td>
@@ -202,7 +208,7 @@ export default function Auctions({ signer, auctionServiceInstance }) {
                                         'hidden px-3 py-3.5 text-sm text-center text-gray-500 lg:table-cell'
                                     )}
                                 >
-                                    <Moment date={auction.deadline} fromNow={true} />
+                                    {auction.deadline}
                                 </td>
 
                                 <td
@@ -214,7 +220,7 @@ export default function Auctions({ signer, auctionServiceInstance }) {
                                     <span
                                         onClick={() => navigator.clipboard.writeText(auction.winner)}
                                     >
-                                        { auction.winner ? auction.winner.substring(0, 4) + '...' + auction.winner.substring(auction.winner.length - 4) : '' }
+                                        {auction.winner ? auction.winner.substring(0, 4) + '...' + auction.winner.substring(auction.winner.length - 4) : ''}
                                     </span>
                                 </td>
 
@@ -224,7 +230,7 @@ export default function Auctions({ signer, auctionServiceInstance }) {
                                         'relative py-3.5 pl-3 pr-4 sm:pr-6 text-left text-sm font-medium'
                                     )}
                                 >
-                                    {auction.status === 0 && auction.deadlineSlot > auctionServiceInstance.api?.getLatestSlot() ?
+                                    {auction.status === 0 && parseInt(auction.deadline.replaceAll(",", "")) > auctionServiceInstance.api?.latestBlockNumber ?
                                         <div className="sm:flex sm:items-center">
                                             <div>
                                                 <input

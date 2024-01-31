@@ -3,7 +3,6 @@ import { IAuctionService } from "./IAuctionService";
 import { singleton } from "tsyringe";
 import { ContractPromise } from '@polkadot/api-contract';
 import { cryptoWaitReady } from '@polkadot/util-crypto';
-import { SHA3 } from 'sha3';
 import { BN, BN_ONE } from "@polkadot/util";
 import chainSpec from "../assets/etfTestSpecRaw.json";
 import abi from '../assets/proxy/tlock_proxy.json';
@@ -11,9 +10,8 @@ import { SubmittableResult } from "@polkadot/api";
 
 @singleton()
 export class AuctionService implements IAuctionService {
-  public api: any;
+  private api: any;
   private contract: any;
-  private lastestSlot: any;
   private readonly MAX_CALL_WEIGHT2 = new BN(1_000_000_000_000).isub(BN_ONE);
   private readonly MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE);
   private readonly PROOFSIZE = new BN(1_000_000_000);
@@ -52,19 +50,16 @@ export class AuctionService implements IAuctionService {
     }
 
     if (!this.api) {
-      await cryptoWaitReady()
-      const etfjs = await import('@ideallabs/etf.js');
-      let api = new etfjs.Etf(process.env.NEXT_PUBLIC_NODE_DETAILS);
-      console.log("Connecting to ETF chain");
+
       try {
+        await cryptoWaitReady()
+        const etfjs = await import('@ideallabs/etf.js');
+        let api = new etfjs.Etf(process.env.NEXT_PUBLIC_NODE_DETAILS, true);
+        console.log("Connecting to ETF chain");
         await api.init(JSON.stringify(chainSpec), this.CUSTOM_TYPES);
         this.api = api;
         //Loading proxy contract
         this.contract = new ContractPromise(this.api.api, abi, process.env.NEXT_PUBLIC_CONTRACT_ADDRESS);
-        this.api.eventEmitter.on('blockHeader', () => {
-          // update the state of the latest slot
-          this.lastestSlot = this.api.latestSlot?.slot?.replace(/,/g, "");
-        });
       } catch (_e) {
         // TODO: next will try to fetch the wasm blob but it doesn't need to
         // since the transitive dependency is built with the desired wasm already 
@@ -82,12 +77,13 @@ export class AuctionService implements IAuctionService {
     throw new Error("Method not implemented.");
   }
 
-  async newAuction(signer: any, title: string, assetId: number, duration: number, deposit: number): Promise<boolean> {
+  async newAuction(
+    signer: any,
+    title: string,
+    deadline: number,
+    deposit: number
+  ): Promise<boolean> {
     let api = await this.getEtfApi(signer.signer)
-    // deadline ~ number of minutes => convert to number of slots
-    let distance = duration * 60 / (this.TIME)
-    // since we only need one value, we don't really need a slot scheduler
-    let target = parseInt(this.lastestSlot) + distance
     async function sendContractTx(contract: any, auctionService: AuctionService): Promise<SubmittableResult> {
       return new Promise(async (resolve, reject) => {
         try {
@@ -99,18 +95,23 @@ export class AuctionService implements IAuctionService {
               }),
               storageDepositLimit: null,
             },
-              title,
-              assetId,
-              target,
+              title.padEnd(48, '1'),
+              deadline,
               deposit,
-            ).signAndSend(signer.address, (result: SubmittableResult) => {
-              // Log the transaction status
+            ).signAndSend(signer.address, (result: any) => {
               console.log('Transaction status:', result.status.type);
               if (result.status.isInBlock || result.status.isFinalized) {
                 console.log(`Transaction included in block hash ${result.status.asInBlock}`);
-                resolve(result);
+                let eventValue;
+                result.contractEvents.forEach(e => {
+                  if (e["event"]["identifier"] == "AuctionCreated") {
+                    eventValue = e["args"][0];
+                    console.log("Extracted:", JSON.stringify(eventValue));
+                  }
+                });
+                resolve(eventValue);
               }
-
+              
             });
         } catch (error) {
           // Reject the promise if any error arises
@@ -120,24 +121,50 @@ export class AuctionService implements IAuctionService {
       });
     };
 
-    return await sendContractTx(this.contract, this).then(() => Promise.resolve(true)).catch(() => {
-      console.log("Error sending transaction");
+    return await sendContractTx(this.contract, this).then((auctionId: any) => {
+      if (auctionId) {
+        console.log(`Scheduling complete for auction ${auctionId}`);
+        return this.scheduleComplete(signer, auctionId, deadline + 2).then(() => {
+          return Promise.resolve(true);
+        });
+      } else
+        return Promise.resolve(true);
+
+    }).catch((error) => {
+      console.log("Error sending transaction", error);
       return Promise.resolve(false);
+    });
+  }
+
+  private async scheduleReveal(signer: any, auctionId: string, amount: number, deadline: number): Promise<any> {
+    let api = await this.getEtfApi(signer.signer);
+    // the call to delay
+    let contractInnerCall = this.contract.tx.revealBid({
+      gasLimit: api.api.registry.createType('WeightV2', {
+        refTime: this.MAX_CALL_WEIGHT2,
+        proofSize: this.PROOFSIZE,
+      }),
+      storageDepositLimit: null,
+    },
+      auctionId,
+      {
+        bidder: api.createType('AccountId', signer.address),
+        bid: amount,
+      }
+    )
+    // prepare delayed call
+    let outerCall = api.delay(contractInnerCall, 127, deadline);
+    await outerCall.call.signAndSend(signer.address, result => {
+      if (result.status.isInBlock) {
+        console.log('in block')
+      }
     });
   }
 
   async bid(signer: any, auctionId: string, deadline: number, amount: number): Promise<boolean> {
     let api = await this.getEtfApi(signer.signer);
-    let amountString = amount.toString();
-    const hasher = new SHA3(256)
-    hasher.update(amountString);
-    const hash = hasher.digest();
-    hasher.update(new Date().getTime().toString());
-    const seed = hasher.digest();
-    // the seed shouldn't be reused
-    let timelockedBid = api.encrypt(amountString, 1, [deadline], seed);
     // now we want to call the publish function of the contract
-    const value = 1000000;
+    const value = 1000000; // value to lock when bidding
     async function sendContractTx(contract: any, auctionService: AuctionService): Promise<SubmittableResult> {
       return new Promise(async (resolve, reject) => {
         try {
@@ -150,11 +177,7 @@ export class AuctionService implements IAuctionService {
               storageDepositLimit: null,
               value,
             },
-              auctionId,
-              timelockedBid.ct.aes_ct.ciphertext,
-              timelockedBid.ct.aes_ct.nonce,
-              timelockedBid.ct.etf_ct[0],
-              Array.from(hash),
+              auctionId
             ).signAndSend(signer.address, (result: SubmittableResult) => {
               // Log the transaction status
               console.log('Transaction status:', result.status.type);
@@ -172,15 +195,40 @@ export class AuctionService implements IAuctionService {
       });
     };
 
-    return await sendContractTx(this.contract, this).then(() => Promise.resolve(true)).catch(() => {
-      console.log("Error sending transaction");
+    return await sendContractTx(this.contract, this).then(() => {
+      // schedule reveal
+      return this.scheduleReveal(signer, auctionId, amount, deadline).then(() => {
+        return Promise.resolve(true);
+      });
+    }).catch((error) => {
+      console.log("Error sending transaction", error);
       return Promise.resolve(false);
+    });
+  }
+
+  private async scheduleComplete(signer: any, auctionId: string, deadline: number): Promise<any> {
+    let api = await this.getEtfApi(signer.signer);
+    // the call to delay
+    let contractInnerCall = this.contract.tx.complete({
+      gasLimit: api.api.registry.createType('WeightV2', {
+        refTime: new BN(1_290_000_000_000),
+        proofSize: new BN(5_000_000_000_000),
+      }),
+      storageDepositLimit: null,
+    },
+      auctionId
+    );
+    // prepare delayed call
+    let outerCall = api.delay(contractInnerCall, 127, deadline);
+    await outerCall.call.signAndSend(signer.address, result => {
+      if (result.status.isInBlock) {
+        console.log('in block')
+      }
     });
   }
 
   async completeAuction(signer: any, auctionId: string, deadline: number): Promise<boolean> {
     let api = await this.getEtfApi(signer.signer);
-    let revealedBids = await this.revealBids(signer.signer, auctionId, deadline);
     async function sendContractTx(contract: any): Promise<SubmittableResult> {
       return new Promise(async (resolve, reject) => {
         try {
@@ -192,8 +240,7 @@ export class AuctionService implements IAuctionService {
               }),
               storageDepositLimit: null,
             },
-              auctionId,
-              revealedBids
+              auctionId
             ).signAndSend(signer.address, (result: SubmittableResult) => {
               // Log the transaction status
               console.log('Transaction status:', result.status.type);
@@ -215,47 +262,6 @@ export class AuctionService implements IAuctionService {
       return Promise.resolve(false);
     });
 
-  }
-
-  /// fetch ciphertext from currently loaded auction contract and decrypt each
-  /// returns an array of (AccountId, Proposal)
-  private async revealBids(signer: any, auctionId: string, deadline: number): Promise<any> {
-    let api = await this.getEtfApi(signer.signer);
-    // fetch ciphertexts from the appropriate auction contract and decrypt them
-    const storageDepositLimit = null;
-    const { result, output } = await this.contract.query.getEncryptedBids(
-      signer.address,
-      {
-        gasLimit: api.api.registry.createType('WeightV2', {
-          refTime: this.MAX_CALL_WEIGHT,
-          proofSize: this.PROOFSIZE,
-        }),
-        storageDepositLimit,
-      },
-      auctionId,
-    );
-    if (!result.err) {
-      let revealedBids = [];
-      let cts = output.toHuman().Ok.Ok;
-      for (const c of cts) {
-        let bidder = c[0];
-        let proposal = api.createType('Proposal', c[1]);
-        let plaintext = await api.decrypt(
-          proposal.ciphertext,
-          proposal.nonce,
-          [proposal.capsule],
-          [deadline],
-        );
-        let bid = Number.parseInt(String.fromCharCode(...plaintext));
-        let revealedBid = {
-          bidder: api.createType('AccountId', bidder),
-          bid: bid,
-        };
-        revealedBids.push(revealedBid);
-      }
-      return Promise.resolve(revealedBids);
-    }
-    return Promise.resolve([]);
   }
 
   async getWinner(signer: any, auctionId: string): Promise<any> {
@@ -349,7 +355,7 @@ export class AuctionService implements IAuctionService {
         parseInt(value.assetId?.replace(/,/g, "") || 0),
         value.deposit,
         parseInt(value.published?.replace(/,/g, "") || 0),
-        this.estimateTime(parseInt(api.getLatestSlot()), deadlineSlot),
+        value.deadline,
         deadlineSlot,
         value.owner,
         parseInt(value.status),
@@ -385,7 +391,7 @@ export class AuctionService implements IAuctionService {
         parseInt(value.assetId?.replace(/,/g, "") || 0),
         value.deposit,
         parseInt(value.published?.replace(/,/g, "") || 0),
-        this.estimateTime(parseInt(api.getLatestSlot()), deadlineSlot),
+        value.deadline,
         deadlineSlot,
         value.owner,
         parseInt(value.status),
@@ -422,7 +428,7 @@ export class AuctionService implements IAuctionService {
         parseInt(value.assetId?.replace(/,/g, "") || 0),
         value.deposit,
         parseInt(value.published?.replace(/,/g, "") || 0),
-        this.estimateTime(parseInt(api.getLatestSlot()), deadlineSlot),
+        value.deadline,
         deadlineSlot,
         value.owner,
         parseInt(value.status),
@@ -435,17 +441,4 @@ export class AuctionService implements IAuctionService {
     const auctions = await Promise.all(promises);
     return Promise.resolve(auctions);
   }
-
-  // precision at seconds instead of ms since our target TIME is measured in seconds
-  private estimateTime(currentSlot: number, deadline: number): Date {
-    // get number of slots left
-    const slotsRemaining = deadline - currentSlot
-    // convert to time (s)
-    let secondsRemaining = slotsRemaining * this.TIME
-    // get deadline as a number of seconds from now
-    let t = new Date()
-    t.setSeconds(t.getSeconds() + secondsRemaining)
-    return t
-  }
-
 }

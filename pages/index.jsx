@@ -13,7 +13,7 @@ export default function Home() {
   //get the service instance
   const auctionServiceInstance = container.resolve(AuctionService);
   const [isConnected, setIsConnected] = useState(false);
-  const [showWalletSelection, setShowWalletSelection] = useState()
+  const [showWalletSelection, setShowWalletSelection] = useState(false)
   const [signer, setSigner] = useState(null);
   const [signerAddress, setSignerAddress] = useState("");
   const [balance, setBalance] = useState(0);
@@ -71,7 +71,7 @@ export default function Home() {
     <>
       <Head>
         <title>EtF Auctions</title>
-        <link rel="icon" href="/favicon-32x32.png" />
+        <link rel="icon" href="/favicon.ico" />
       </Head>
       <>
         <Header
@@ -79,6 +79,7 @@ export default function Home() {
           onConnect={handleConnect}
           connectedAddress={signerAddress}
           isConnected={isConnected}
+          auctionServiceInstance={auctionServiceInstance}
         />
         <Modal
           title="Select a wallet"
@@ -144,7 +145,7 @@ export default function Home() {
                   </div>
                 </div>
                 <p className="mt-8 text-base text-gray-400 md:order-1 md:mt-0">
-                  &copy; 2023 Ideal Labs, Inc. All rights reserved.
+                  &copy; 2024 Ideal Labs, LLC. All rights reserved.
                 </p>
               </div>
             </footer>

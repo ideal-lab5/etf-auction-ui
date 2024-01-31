@@ -3,7 +3,7 @@ const nextConfig = {
   output: 'export',
   trailingSlash: false,
   assetPrefix: '.',
-  experiments: { asyncWebAssembly: true },
+  experiments: { syncWebAssembly: true },
   output: webassemblyModuleFilename = 'static/wasm/[modulehash].wasm'
 }
 
