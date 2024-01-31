@@ -54,7 +54,7 @@ export class AuctionService implements IAuctionService {
       try {
         await cryptoWaitReady()
         const etfjs = await import('@ideallabs/etf.js');
-        let api = new etfjs.Etf(process.env.NEXT_PUBLIC_NODE_DETAILS, false);
+        let api = new etfjs.Etf(process.env.NEXT_PUBLIC_NODE_DETAILS, true);
         console.log("Connecting to ETF chain");
         await api.init(JSON.stringify(chainSpec), this.CUSTOM_TYPES);
         this.api = api;
